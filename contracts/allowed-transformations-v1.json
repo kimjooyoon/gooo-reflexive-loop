@@ -1,0 +1,19 @@
+{
+  "schema": "gooo/reflexive-loop/allowed-transformations/v1",
+  "authority": "Gooo meta activity SelectAllowedTransformation",
+  "default_scope": "temporary_output",
+  "transformations": [
+    {
+      "id": "canonicalize-workload-source",
+      "name": "CanonicalizeWorkloadSource",
+      "selector_activity": "SelectAllowedTransformation",
+      "apply_activity": "ApplyAllowedMetaActivity",
+      "input": "fixtures/use-case/workload.gooo",
+      "output": "candidate/workload.gooo",
+      "operation": "collapse_blank_lines_and_trim_trailing_space",
+      "oracle": "scripts/oracle.sh",
+      "authority_scope": "temporary_output",
+      "replay_policy": "unique_proposal_digest"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema": "gooo/reflexive-loop/metric-catalog/v1",
+  "source_file": "examples/reflexive-loop/main.gooo",
+  "fixed_denominator": 1,
+  "metrics": [
+    {"id":"gooo.metric.reflexive.claim-observed.v1","cell":"CLAIM_OBSERVED","activity":"ObserveClaim","ir_node_kind":"Activity","generated_artifact":"metrics/claim-observed.json","evaluator":"scripts/evaluate.sh:CLAIM_OBSERVED"},
+    {"id":"gooo.metric.reflexive.receipt-observed.v1","cell":"RECEIPT_OBSERVED","activity":"ObserveReceipt","ir_node_kind":"Activity","generated_artifact":"metrics/receipt-observed.json","evaluator":"scripts/evaluate.sh:RECEIPT_OBSERVED"},
+    {"id":"gooo.metric.reflexive.contract-bound.v1","cell":"CONTRACT_BOUND","activity":"BindContractDigest","ir_node_kind":"Activity","generated_artifact":"metrics/contract-bound.json","evaluator":"scripts/evaluate.sh:CONTRACT_BOUND"},
+    {"id":"gooo.metric.reflexive.meta-graph.v1","cell":"META_GRAPH_OBSERVED","activity":"ObserveGoooMetaGraph","ir_node_kind":"Activity","generated_artifact":"metrics/meta-graph.json","evaluator":"scripts/evaluate.sh:META_GRAPH_OBSERVED"},
+    {"id":"gooo.metric.reflexive.meta-resolution.v1","cell":"META_ACTIVITIES_RESOLVED","activity":"ResolveMetaActivities","ir_node_kind":"Activity","generated_artifact":"metrics/meta-resolution.json","evaluator":"scripts/evaluate.sh:META_ACTIVITIES_RESOLVED"},
+    {"id":"gooo.metric.reflexive.proposal.v1","cell":"PROPOSAL_DETERMINISTIC","activity":"ProposeDeterministicCandidate","ir_node_kind":"Activity","generated_artifact":"metrics/proposal.json","evaluator":"scripts/evaluate.sh:PROPOSAL_DETERMINISTIC"},
+    {"id":"gooo.metric.reflexive.allowed-transform.v1","cell":"TRANSFORMATION_ALLOWED","activity":"SelectAllowedTransformation","ir_node_kind":"Activity","generated_artifact":"metrics/allowed-transform.json","evaluator":"scripts/evaluate.sh:TRANSFORMATION_ALLOWED"},
+    {"id":"gooo.metric.reflexive.temp-clone.v1","cell":"TEMPORARY_CLONE_CREATED","activity":"CreateTemporaryClone","ir_node_kind":"Activity","generated_artifact":"metrics/temp-clone.json","evaluator":"scripts/evaluate.sh:TEMPORARY_CLONE_CREATED"},
+    {"id":"gooo.metric.reflexive.apply.v1","cell":"META_ACTIVITY_APPLIED","activity":"ApplyAllowedMetaActivity","ir_node_kind":"Activity","generated_artifact":"metrics/apply.json","evaluator":"scripts/evaluate.sh:META_ACTIVITY_APPLIED"},
+    {"id":"gooo.metric.reflexive.before-measurement.v1","cell":"BEFORE_MEASURED","activity":"RunBeforeWorkload","ir_node_kind":"Activity","generated_artifact":"metrics/before-measurement.json","evaluator":"scripts/evaluate.sh:BEFORE_MEASURED"},
+    {"id":"gooo.metric.reflexive.after-measurement.v1","cell":"AFTER_MEASURED","activity":"RunAfterWorkload","ir_node_kind":"Activity","generated_artifact":"metrics/after-measurement.json","evaluator":"scripts/evaluate.sh:AFTER_MEASURED"},
+    {"id":"gooo.metric.reflexive.oracle.v1","cell":"ORACLE_EQUIVALENT","activity":"VerifyIndependentOracle","ir_node_kind":"Activity","generated_artifact":"metrics/oracle.json","evaluator":"scripts/evaluate.sh:ORACLE_EQUIVALENT"},
+    {"id":"gooo.metric.reflexive.exact-pair.v1","cell":"EXACT_PAIR_BOUND","activity":"CompareExactWorkloadPair","ir_node_kind":"Activity","generated_artifact":"metrics/exact-pair.json","evaluator":"scripts/evaluate.sh:EXACT_PAIR_BOUND"},
+    {"id":"gooo.metric.reflexive.promotion.v1","cell":"PROMOTION_GATED","activity":"GatePromotion","ir_node_kind":"Activity","generated_artifact":"metrics/promotion.json","evaluator":"scripts/evaluate.sh:PROMOTION_GATED"},
+    {"id":"gooo.metric.reflexive.rollback.v1","cell":"ROLLBACK_BOUND","activity":"RecordRollbackBoundary","ir_node_kind":"Activity","generated_artifact":"metrics/rollback.json","evaluator":"scripts/evaluate.sh:ROLLBACK_BOUND"},
+    {"id":"gooo.metric.reflexive.adverse-authority.v1","cell":"ADVERSE_AUTHORITY_REJECTED","activity":"RejectAdverseAuthority","ir_node_kind":"Activity","generated_artifact":"metrics/adverse-authority.json","evaluator":"scripts/evaluate.sh:ADVERSE_AUTHORITY_REJECTED"},
+    {"id":"gooo.metric.reflexive.read-only.v1","cell":"READ_ONLY_BOUND","activity":"PreserveReadOnlyBoundary","ir_node_kind":"Activity","generated_artifact":"metrics/read-only.json","evaluator":"scripts/evaluate.sh:READ_ONLY_BOUND"},
+    {"id":"gooo.metric.reflexive.artifact.v1","cell":"ARTIFACT_EMITTED","activity":"EmitEvidenceArtifact","ir_node_kind":"Activity","generated_artifact":"metrics/artifact.json","evaluator":"scripts/evaluate.sh:ARTIFACT_EMITTED"}
+  ]
+}

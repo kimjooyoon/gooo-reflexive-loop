@@ -1,0 +1,40 @@
+package reflexiveloop
+namespace reflexiveloop
+
+entity Claim id "gooo://reflexive-loop/entity/claim"
+entity ObservationReceipt id "gooo://reflexive-loop/entity/observation-receipt"
+entity ContractDigest id "gooo://reflexive-loop/entity/contract-digest"
+entity MetaGraph id "gooo://reflexive-loop/entity/meta-graph"
+entity ActivityResolution id "gooo://reflexive-loop/entity/activity-resolution"
+entity Proposal id "gooo://reflexive-loop/entity/proposal"
+entity AllowedTransformation id "gooo://reflexive-loop/entity/allowed-transformation"
+entity TemporaryClone id "gooo://reflexive-loop/entity/temporary-clone"
+entity WorkloadReceipt id "gooo://reflexive-loop/entity/workload-receipt"
+entity OracleVerdict id "gooo://reflexive-loop/entity/oracle-verdict"
+entity WorkloadPair id "gooo://reflexive-loop/entity/workload-pair"
+entity PromotionDecision id "gooo://reflexive-loop/entity/promotion-decision"
+entity RollbackReceipt id "gooo://reflexive-loop/entity/rollback-receipt"
+entity AuthorityEvidence id "gooo://reflexive-loop/entity/authority-evidence"
+entity RepositoryEffect id "gooo://reflexive-loop/entity/repository-effect"
+entity MeasurementReceipt id "gooo://reflexive-loop/entity/measurement-receipt"
+entity EvidenceState id "gooo://reflexive-loop/entity/evidence-state"
+entity ArtifactReceipt id "gooo://reflexive-loop/entity/artifact-receipt"
+
+activity ObserveClaim(Claim) -> EvidenceState
+activity ObserveReceipt(ObservationReceipt) -> EvidenceState
+activity BindContractDigest(ContractDigest) -> EvidenceState
+activity ObserveGoooMetaGraph(MetaGraph) -> EvidenceState
+activity ResolveMetaActivities(ActivityResolution) -> EvidenceState
+activity ProposeDeterministicCandidate(Proposal) -> EvidenceState
+activity SelectAllowedTransformation(AllowedTransformation) -> EvidenceState
+activity CreateTemporaryClone(TemporaryClone) -> EvidenceState
+activity ApplyAllowedMetaActivity(TemporaryClone) -> EvidenceState
+activity RunBeforeWorkload(WorkloadReceipt) -> EvidenceState
+activity RunAfterWorkload(WorkloadReceipt) -> EvidenceState
+activity VerifyIndependentOracle(OracleVerdict) -> EvidenceState
+activity CompareExactWorkloadPair(WorkloadPair) -> EvidenceState
+activity GatePromotion(PromotionDecision) -> EvidenceState
+activity RecordRollbackBoundary(RollbackReceipt) -> EvidenceState
+activity RejectAdverseAuthority(AuthorityEvidence) -> EvidenceState
+activity PreserveReadOnlyBoundary(RepositoryEffect) -> EvidenceState
+activity EmitEvidenceArtifact(ArtifactReceipt) -> EvidenceState

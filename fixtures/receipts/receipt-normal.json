@@ -1,0 +1,14 @@
+{
+  "schema": "gooo/reflexive-loop/observation-receipt/v1",
+  "id": "receipt-normal-v1",
+  "claim_id": "claim-normal-v1",
+  "state": "CLOSED",
+  "stage": "OBSERVE",
+  "step": "CAPTURE_WORKLOAD_OBSERVATION",
+  "reason": "WORKLOAD_OBSERVED",
+  "source_digest": "sha256:02407a4eb9ecff3234c0343485280853cc5097e8f76b6924a43502c46a3649a2",
+  "workload_digest": "sha256:7ff2e223b97ca46f2e1334b5a58097a5e024bb3d6a1d9287df2b8ee146832a15",
+  "contract_digest": "sha256:6e69194e9712906fb6ec0c6b56998e50288e4ff20c9c13dbe551d064ce3ce5b7",
+  "observed_by": "independent-observer",
+  "proposal_reuse": false
+}
