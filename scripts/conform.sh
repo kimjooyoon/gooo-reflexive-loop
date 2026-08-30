@@ -29,7 +29,9 @@ run_case() {
   local receipt=$3
   local expected=$4
   local output="$artifact_dir/scenarios/$name"
+  echo "running scenario: $name"
   bash "$repository/scripts/run-loop.sh" "$gooo" "$repository" "$claim" "$receipt" "$output" "$name"
+  echo "observed scenario: $name decision=$(jq -r '.decision' "$output/report.json")"
   jq -e --arg expected "$expected" '.decision==$expected and .summary.total==18 and .precedence==["REFUTED","UNKNOWN","CLOSED"]' "$output/report.json" >/dev/null
 }
 
