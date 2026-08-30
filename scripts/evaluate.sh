@@ -130,7 +130,7 @@ jq -S -n \
     bindings:{source_file:$catalog.source_file,one_to_one:(([$metrics[]|select(.activity != null and .ir_node_kind=="Activity" and .generated_artifact != null and .evaluator != null)]|length)==$den.target_cells),entries:$metrics},
     observed:{source:$observation.source,meta_graph:$observation.meta_graph,inventory:$observation.inventory},
     performance:{before:($workload_pair.before // null),after:($workload_pair.after // null),exact_identity:($workload_pair.exact_identity // false),tool_digest:($workload_pair.tool_digest // null),contract_digest:($workload_pair.contract_digest // null),input_digest:($workload_pair.input_digest // null)},
-    authority:{scope:($claim.authority.requested_scope // null),promotion_rights:($claim.authority.promotion_rights // null),repository_writes:($effect.repository_writes // null),root_readme_readiness:"EXCLUDED"},
+    authority:{scope:($claim.authority.requested_scope // null),promotion_rights:$claim.authority.promotion_rights,repository_writes:$effect.repository_writes,root_readme_readiness:"EXCLUDED"},
     artifact:$artifact_manifest,
     adversarial:(if $adverse == null then {scenario:"none",state:"CLOSED"} else {scenario:$adverse.cell,state:"REFUTED",reason:$adverse.reason,next_operation:$adverse.next} end)
   }

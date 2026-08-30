@@ -102,6 +102,12 @@ else
   jq -S -n '{schema:"gooo/reflexive-loop/rollback-receipt/v1",mode:"OUTPUT_ONLY",repository_writes:0,target:"temporary_output",applied:false}' > "$output/rollback.json"
 fi
 
+input_after=$(snapshot)
+jq -S --arg after "$input_after" \
+  '.after_digest=$after | .repository_writes=(if .before_digest==$after then 0 else 1 end)' \
+  "$output/repository-effect.json" > "$output/repository-effect.updated.json"
+mv "$output/repository-effect.updated.json" "$output/repository-effect.json"
+
 jq -S -n '{manifest_ok:false,files:0,bytes:0}' > "$output/artifact-manifest.json"
 bash "$repository/scripts/evaluate.sh" \
   "$repository/contracts/loop-denominator-v1.json" "$repository/contracts/metric-catalog-v1.json" \
@@ -128,4 +134,4 @@ jq -S -n --arg before "$input_before" --arg after "$input_after" \
   --arg scenario "$scenario" --arg report_digest "$(sha256sum "$output/report.json" | awk '{print "sha256:" $1}')" \
   --argjson artifact_files "$artifact_files" --argjson artifact_bytes "$artifact_bytes" \
   --slurpfile report "$output/report.json" \
-  '{schema:"gooo/reflexive-loop/ci-artifact/v1",scenario:$scenario,report_digest:$report_digest,decision:$report[0].decision,summary:$report[0].summary,precedence:$report[0].precedence,unknown:[$report[0].cells[]|select(.state=="UNKNOWN")|{stage,step,reason,unknown_class,next_operation,blocked_by}],refuted:[$report[0].cells[]|select(.state=="REFUTED")|{stage,step,reason,next_operation,blocked_by}],inventory:$report[0].observed.inventory,performance:{build_wall_ms:($report[0].performance.before.wall_ms // 0),build_peak_rss_kib:($report[0].performance.before.peak_rss_kib // 0),test_wall_ms:(($report[0].performance.before.wall_ms // 0)+($report[0].performance.after.wall_ms // 0)),test_peak_rss_kib:([($report[0].performance.before.peak_rss_kib // 0),($report[0].performance.after.peak_rss_kib // 0)]|max),conformance_wall_ms:0,conformance_peak_rss_kib:0,before:$report[0].performance.before,after:$report[0].performance.after},artifact:{files:$artifact_files,bytes:$artifact_bytes},repository_writes:($report[0].authority.repository_writes // null),metrics:$report[0].metrics,bindings:$report[0].bindings,input_before:$before,input_after:$after,repository_unchanged:($before==$after)}' > "$output/ci-artifact.json"
+  '{schema:"gooo/reflexive-loop/ci-artifact/v1",scenario:$scenario,report_digest:$report_digest,decision:$report[0].decision,summary:$report[0].summary,precedence:$report[0].precedence,unknown:[$report[0].cells[]|select(.state=="UNKNOWN")|{stage,step,reason,unknown_class,next_operation,blocked_by}],refuted:[$report[0].cells[]|select(.state=="REFUTED")|{stage,step,reason,next_operation,blocked_by}],inventory:$report[0].observed.inventory,performance:{build_wall_ms:($report[0].performance.before.wall_ms // 0),build_peak_rss_kib:($report[0].performance.before.peak_rss_kib // 0),test_wall_ms:(($report[0].performance.before.wall_ms // 0)+($report[0].performance.after.wall_ms // 0)),test_peak_rss_kib:([($report[0].performance.before.peak_rss_kib // 0),($report[0].performance.after.peak_rss_kib // 0)]|max),conformance_wall_ms:0,conformance_peak_rss_kib:0,before:$report[0].performance.before,after:$report[0].performance.after},artifact:{files:$artifact_files,bytes:$artifact_bytes},repository_writes:$report[0].authority.repository_writes,metrics:$report[0].metrics,bindings:$report[0].bindings,input_before:$before,input_after:$after,repository_unchanged:($before==$after)}' > "$output/ci-artifact.json"
