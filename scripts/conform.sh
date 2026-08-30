@@ -32,7 +32,13 @@ run_case() {
   echo "running scenario: $name"
   bash "$repository/scripts/run-loop.sh" "$gooo" "$repository" "$claim" "$receipt" "$output" "$name"
   echo "observed scenario: $name decision=$(jq -r '.decision' "$output/report.json")"
-  jq -e --arg expected "$expected" '.decision==$expected and .summary.total==18 and .precedence==["REFUTED","UNKNOWN","CLOSED"]' "$output/report.json" >/dev/null
+  if ! jq -e --arg expected "$expected" '.decision==$expected and .summary.total==18 and .precedence==["REFUTED","UNKNOWN","CLOSED"]' "$output/report.json" >/dev/null; then
+    jq '{decision,summary,claim,promotion,adversarial,performance,authority}' "$output/report.json" >&2
+    jq . "$output/proposal.json" >&2
+    jq . "$output/workload-pair.json" >&2
+    jq . "$output/oracle.json" >&2
+    return 1
+  fi
 }
 
 run_case normal "$tmp/claim-normal.json" "$tmp/receipt-normal.json" PROMOTED
