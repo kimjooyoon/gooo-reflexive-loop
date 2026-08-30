@@ -59,8 +59,8 @@ if [ "$(jq -r '.contract_digest' "$claim")" != "$contract_digest" ]; then reason
 if [ "$(jq -r '.proposal_reuse // false' "$receipt")" = "true" ] || [ "$(jq -r '.reused_proposal_id // empty' "$receipt")" != "" ]; then reason="PROPOSAL_REPLAY"; fi
 if [ "$(jq -r '.decision // empty' "$receipt")" = "FIXED_POINT" ]; then reason="UNSUPPORTED_FIXED_POINT_DECISION"; fi
 if [ "$(jq -r '.authority.requested_scope // empty' "$claim")" != "temporary_output" ] ||
-   [ "$(jq -r '.authority.input_repository_writes // true' "$claim")" != "false" ] ||
-   [ "$(jq -r '.authority.promotion_rights // true' "$claim")" != "false" ]; then reason="AUTHORITY_ESCALATION"; fi
+   [ "$(jq -r '.authority.input_repository_writes | tostring' "$claim")" != "false" ] ||
+   [ "$(jq -r '.authority.promotion_rights | tostring' "$claim")" != "false" ]; then reason="AUTHORITY_ESCALATION"; fi
 
 if [ -n "$reason" ]; then
   jq -S -n --arg reason "$reason" \

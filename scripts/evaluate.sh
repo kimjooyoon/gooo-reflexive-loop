@@ -47,7 +47,7 @@ jq -S -n \
   def stale: ((malformed_receipt|not) and (($receipt.source_digest // "") != ($observation.source.digest // "") or ($receipt.workload_digest // "") != ($observation.workload.digest // "") or ($receipt.contract_digest // "") != ($observation.contract_digest // "")));
   def self_approval: ((malformed_claim|not) and $claim.caller == $claim.approver);
   def replay: ((malformed_receipt|not) and (($receipt.proposal_reuse // false) == true or (($receipt.reused_proposal_id // "")|length)>0));
-  def authority_escalation: ((malformed_claim|not) and (($claim.authority.requested_scope // "") != "temporary_output" or ($claim.authority.input_repository_writes // true) != false or ($claim.authority.promotion_rights // true) != false));
+  def authority_escalation: ((malformed_claim|not) and (($claim.authority.requested_scope // "") != "temporary_output" or ($claim.authority.input_repository_writes != false) or ($claim.authority.promotion_rights != false)));
   def fixed_point: ((malformed_receipt|not) and (($receipt.decision // "") == "FIXED_POINT"));
   def contract_ok: ((malformed_claim|not) and (malformed_receipt|not) and $claim.contract_digest == $observation.contract_digest and $receipt.contract_digest == $observation.contract_digest);
   def observation_ok: (($observation.schema // "") == "gooo/reflexive-loop/observation/v1" and $observation.meta_graph.schema_version == "gooo-graph/v1" and $observation.meta_graph.activity_nodes == $den.target_cells and $observation.resolutions.expected == $den.target_cells and $observation.resolutions.closed == $den.target_cells and $observation.resolutions.unknown == 0 and $observation.resolutions.refuted == 0);
