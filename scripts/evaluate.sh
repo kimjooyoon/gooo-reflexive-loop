@@ -90,7 +90,7 @@ jq -S -n \
     ADVERSE_AUTHORITY_REJECTED:(if authority_escalation then refuted($den.cells[15];"AUTHORITY_ESCALATION_ACCEPTED";"DROP_ESCALATED_AUTHORITY") elif malformed_claim then unknown($den.cells[15];"AUTHORITY_EVIDENCE_UNAVAILABLE";"DIRECT_MISSING";"PROVIDE_AUTHORITY_EVIDENCE";[]) else closed($den.cells[15];"ADVERSE_AUTHORITY_REJECTED") end),
     READ_ONLY_BOUND:(if effect_ok then closed($den.cells[16];"INPUT_REPOSITORY_UNCHANGED") elif ($effect|length)==0 then unknown($den.cells[16];"READ_ONLY_EVIDENCE_UNAVAILABLE";"DIRECT_MISSING";"COMPARE_REPOSITORY_SNAPSHOTS";[]) else refuted($den.cells[16];"INPUT_REPOSITORY_CHANGED";"RESTORE_INPUT_REPOSITORY") end),
     ARTIFACT_EMITTED:(if $artifact_manifest.manifest_ok == true then closed($den.cells[17];"EVIDENCE_ARTIFACT_EMITTED") else unknown($den.cells[17];"EVIDENCE_ARTIFACT_UNAVAILABLE";"DIRECT_MISSING";"REBUILD_EVIDENCE_ARTIFACT";[]) end)
-  }) as $facts |
+  } as $facts |
   (reduce $den.cells[] as $cell ({cells:[],decisions:{}};
     . as $acc |
     ($facts[$cell.id]) as $fact |

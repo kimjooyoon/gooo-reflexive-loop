@@ -57,6 +57,18 @@ jobs:
           set -euo pipefail
           evidence="$RUNNER_TEMP/gooo-reflexive-loop-evidence"
           mkdir -p "$evidence"
+          build_start_ns=$(date +%s%N)
+          /usr/bin/time -f '%e\t%M' -o "$RUNNER_TEMP/build-time.tsv" \
+            "$GOOO_BIN" graph dump "$GITHUB_WORKSPACE/examples/reflexive-loop/main.gooo" > "$RUNNER_TEMP/build-graph.json"
+          build_end_ns=$(date +%s%N)
+          build_wall_ms=$(( (build_end_ns - build_start_ns) / 1000000 ))
+          read -r build_seconds build_rss < "$RUNNER_TEMP/build-time.tsv"
+          test_start_ns=$(date +%s%N)
+          /usr/bin/time -f '%e\t%M' -o "$RUNNER_TEMP/test-time.tsv" \
+            "$GOOO_BIN" check --semantic --json "$GITHUB_WORKSPACE/fixtures/use-case/workload.gooo" > "$RUNNER_TEMP/test.json"
+          test_end_ns=$(date +%s%N)
+          test_wall_ms=$(( (test_end_ns - test_start_ns) / 1000000 ))
+          read -r test_seconds test_rss < "$RUNNER_TEMP/test-time.tsv"
           start_ns=$(date +%s%N)
           /usr/bin/time -f '%e\t%M' -o "$RUNNER_TEMP/conformance-time.tsv" \
             bash scripts/conform.sh "$GOOO_BIN" "$GITHUB_WORKSPACE" "$evidence"
@@ -65,11 +77,15 @@ jobs:
           read -r seconds rss < "$RUNNER_TEMP/conformance-time.tsv"
           conformance_rss=${rss:-0}
           jq -S --argjson wall_ms "$wall_ms" --argjson rss "$conformance_rss" \
-            '.performance={build_wall_ms:0,build_peak_rss_kib:0,test_wall_ms:0,test_peak_rss_kib:0,conformance_wall_ms:$wall_ms,conformance_peak_rss_kib:$rss}' \
+            --argjson build_wall_ms "$build_wall_ms" --argjson build_rss "${build_rss:-0}" \
+            --argjson test_wall_ms "$test_wall_ms" --argjson test_rss "${test_rss:-0}" \
+            '.performance={build_wall_ms:$build_wall_ms,build_peak_rss_kib:$build_rss,test_wall_ms:$test_wall_ms,test_peak_rss_kib:$test_rss,conformance_wall_ms:$wall_ms,conformance_peak_rss_kib:$rss}' \
             "$evidence/conformance.json" > "$RUNNER_TEMP/conformance.json"
           mv "$RUNNER_TEMP/conformance.json" "$evidence/conformance.json"
           jq -S --argjson wall_ms "$wall_ms" --argjson rss "$conformance_rss" \
-            '.performance.conformance_wall_ms=$wall_ms | .performance.conformance_peak_rss_kib=$rss' \
+            --argjson build_wall_ms "$build_wall_ms" --argjson build_rss "${build_rss:-0}" \
+            --argjson test_wall_ms "$test_wall_ms" --argjson test_rss "${test_rss:-0}" \
+            '.performance.build_wall_ms=$build_wall_ms | .performance.build_peak_rss_kib=$build_rss | .performance.test_wall_ms=$test_wall_ms | .performance.test_peak_rss_kib=$test_rss | .performance.conformance_wall_ms=$wall_ms | .performance.conformance_peak_rss_kib=$rss' \
             "$evidence/scenarios/normal/ci-artifact.json" > "$RUNNER_TEMP/normal-ci-artifact.json"
           mv "$RUNNER_TEMP/normal-ci-artifact.json" "$evidence/scenarios/normal/ci-artifact.json"
 

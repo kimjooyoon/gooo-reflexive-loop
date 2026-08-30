@@ -50,6 +50,7 @@ physical_lines() {
     xargs -0 -r wc -l | awk 'END {print $1 + 0}'
 }
 
+descendant_dirs=$(find "$repository" -path "$repository/.git" -prune -o -type d ! -path "$repository" -print | wc -l | awk '{print $1 + 0}')
 go_files=$(find "$repository" -path "$repository/.git" -prune -o -type f -name '*.go' -print | wc -l | awk '{print $1 + 0}')
 go_lines=$(find "$repository" -path "$repository/.git" -prune -o -type f -name '*.go' -print0 | xargs -0 -r wc -l | awk 'END {print $1 + 0}')
 gooo_files=$(find "$repository" -path "$repository/.git" -prune -o -type f -name '*.gooo' -print | wc -l | awk '{print $1 + 0}')
@@ -70,6 +71,7 @@ jq -S -n \
   --slurpfile resolutions "$output/observation/resolutions.json" \
   --argjson regular_files "$(physical_count)" \
   --argjson physical_lines "$(physical_lines)" \
+  --argjson descendant_dirs "$descendant_dirs" \
   --argjson go_files "$go_files" \
   --argjson go_lines "$go_lines" \
   --argjson gooo_files "$gooo_files" \
@@ -87,6 +89,6 @@ jq -S -n \
     semantic:{status:($semantic[0].status // "unknown"),digest:($semantic[0].semantic_hash // $g.ir.semantic_digest // null)},
     meta_graph:{schema_version:($g.schema_version // null),activity_nodes:([$g.nodes[]? | select(.kind=="Activity")]|length),entity_nodes:([$g.nodes[]? | select(.kind=="Entity")]|length),graph_hash:($g.graph_hash // null)},
     resolutions:{expected:($r|length),closed:([$r[]?|select(.decision=="CLOSED")]|length),unknown:([$r[]?|select(.decision=="UNKNOWN")]|length),refuted:([$r[]?|select(.decision=="REFUTED")]|length),items:$r},
-    inventory:{root_readme_excluded:true,regular_files:$regular_files,physical_lines:$physical_lines,go:{files:$go_files,lines:$go_lines},gooo:{files:$gooo_files,lines:$gooo_lines}}
+    inventory:{root_readme_excluded:true,descendant_dirs:$descendant_dirs,regular_files:$regular_files,physical_lines:$physical_lines,go:{files:$go_files,lines:$go_lines},gooo:{files:$gooo_files,lines:$gooo_lines}}
   }
 ' > "$output/observation/observation.json"
