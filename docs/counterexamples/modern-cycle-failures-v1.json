@@ -1,0 +1,12 @@
+{
+  "schema": "gooo/reflexive-loop/modern-cycle/failure-counterexamples/v1",
+  "version": "v0.3.0",
+  "source": "github-actions-modern-cycle-conformance",
+  "precedence": ["REFUTED", "UNKNOWN", "CLOSED"],
+  "records": [
+    {"scenario": "unauthorized-self-approval", "expected_decision": "REFUTED", "counterexample": "UNAUTHORIZED_SELF_APPROVAL"},
+    {"scenario": "preimage-mismatch", "expected_decision": "REFUTED", "counterexample": "STALE_PREIMAGE"},
+    {"scenario": "false-negative-test-selection", "expected_decision": "REFUTED", "counterexample": "FALSE_NEGATIVE_COUNTEREXAMPLE_PRESENT"},
+    {"scenario": "rollback-mismatch", "expected_decision": "REFUTED", "counterexample": "ROLLBACK_MISMATCH"}
+  ]
+}
