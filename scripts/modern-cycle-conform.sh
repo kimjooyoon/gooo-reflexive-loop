@@ -44,9 +44,13 @@ run_case() {
     done
     return "$loop_status"
   fi
-  jq -e --arg scenario "$scenario" \
+  if ! jq -e --arg scenario "$scenario" \
     '.schema=="gooo/reflexive-loop/modern-cycle/report/v1" and .version=="v0.3.0" and .scenario==$scenario' \
-    "$output/report.json" >/dev/null
+    "$output/report.json" >/dev/null; then
+    echo "report identity assertion failed: $scenario" >&2
+    if [ -f "$output/report.json" ]; then jq '.' "$output/report.json" >&2 || true; fi
+    return 1
+  fi
   if ! jq -e --arg expected "$expected" \
     '.decision==$expected and .precedence==["REFUTED","UNKNOWN","CLOSED"] and .denominator.cells==12 and .denominator.proof_totals=={FOUNDATION:4,COHERENCE:4,REGRESSION:4} and .denominator.indicator_totals=={DRIVER:4,OUTCOME:4,GUARDRAIL:4} and (.activities|length)==12 and .repository.unchanged==true and .promotion.mode=="OUTPUT_ONLY"' \
     "$output/report.json" >/dev/null; then
