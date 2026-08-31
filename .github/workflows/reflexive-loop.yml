@@ -165,9 +165,9 @@ jobs:
           fetch_component change_bundle
           fetch_component test_frontier
 
-          proposer_archive="$upstream/proposer/assets/$(jq -r '.releases.proposer.assets[]|select(.name|endswith(".tar.gz") and contains("proposer-v"))|.name' "$lock")"
+          proposer_archive="$upstream/proposer/assets/$(jq -r '.releases.proposer.assets[]|select(.name=="gooo-improvement-proposer-v0.1.1.tar.gz")|.name' "$lock")"
           frontier_archive="$upstream/frontier/assets/$(jq -r '.releases.frontier.assets[]|select(.name|endswith(".tar.gz"))|.name' "$lock")"
-          change_archive="$upstream/change_bundle/assets/$(jq -r '.releases.change_bundle.assets[]|select(.name|endswith(".tar.gz") and contains("change-bundle-v"))|.name' "$lock")"
+          change_archive="$upstream/change_bundle/assets/$(jq -r '.releases.change_bundle.assets[]|select(.name=="gooo-change-bundle-v0.1.1.tar.gz")|.name' "$lock")"
           test_archive="$upstream/test_frontier/assets/$(jq -r '.releases.test_frontier.assets[]|select(.name|endswith(".tar.gz"))|.name' "$lock")"
           tar -xzf "$proposer_archive" -C "$upstream/proposer/source"
           tar -xzf "$frontier_archive" -C "$upstream/frontier/source"
