@@ -88,15 +88,21 @@ jobs:
             local expected_size=$5
             local output=$6
             local asset_id
+            local tag
             local asset_digest
             local asset_size
+            tag=$(jq -r '.tag_name' "$release_file")
             asset_id=$(jq -r --arg name "$asset_name" '[.assets[]|select(.name==$name)][0].id // empty' "$release_file")
             test -n "$asset_id"
             asset_digest=$(jq -r --arg name "$asset_name" '[.assets[]|select(.name==$name)][0].digest // empty' "$release_file")
             asset_size=$(jq -r --arg name "$asset_name" '[.assets[]|select(.name==$name)][0].size // empty' "$release_file")
             test "$asset_digest" = "$expected_digest"
             test "$asset_size" -eq "$expected_size"
-            gh api -H 'Accept: application/octet-stream' "repos/$repository/releases/assets/$asset_id" > "$output"
+            if ! gh api -H 'Accept: application/octet-stream' "repos/$repository/releases/assets/$asset_id" > "$output"; then
+              wget -q --show-progress --server-response \
+                --header='Accept: application/octet-stream' \
+                "https://github.com/$repository/releases/download/$tag/$asset_name?download=1" -O "$output"
+            fi
             printf '%s  %s\n' "${expected_digest#sha256:}" "$output" | sha256sum -c -
             test "$(wc -c < "$output" | awk '{print $1 + 0}')" -eq "$expected_size"
           }
