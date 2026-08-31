@@ -34,6 +34,27 @@ The normal fixture runs the same workload before and after a permitted
 reported verbatim; a slower after-run is recorded and never converted into a
 positive utility claim.
 
+## Exact external release integration
+
+The integration path consumes the immutable `v0.1.0` releases pinned in
+[`contracts/external-release-locks-v1.json`](contracts/external-release-locks-v1.json):
+[`gooo-meta-budget`](https://github.com/kimjooyoon/gooo-meta-budget/releases/tag/v0.1.0)
+selects the allowed execution plan, and
+[`gooo-resolution-lattice`](https://github.com/kimjooyoon/gooo-resolution-lattice/releases/tag/v0.1.0)
+supplies the performance/utility `UNKNOWN` receipt. CI checks release
+immutability, target SHA, manifest digest, evidence digest/size, and the
+internal scenario and metric bindings before writing the selected plan into
+the proposal. The plan controls temporary apply and the UNKNOWN receipt keeps
+the six fields (`stage`, `step`, `reason`, `unknown_class`, `next_operation`,
+`blocked_by`) without inferring utility.
+
+This is an additional eight-cell integration report; the original v0.1.0
+18-cell denominator and its meanings are unchanged. The same Actions job also
+proves `cross_project_required_gates=0`, records the independent oracle and
+promote/rollback boundary, and exercises tampered digest, stale target,
+missing-UNKNOWN-field, release replay, and authority-escalation cases as
+`REFUTED`.
+
 ## Running in CI
 
 The checked-in workflow downloads the pinned Gooo release, performs all
