@@ -70,9 +70,13 @@ run_case() {
     fi
     return 1
   fi
-  jq -e --arg expected "$(jq -r '.decision' "$output/report.json")" \
+  if ! jq -e --arg expected "$(jq -r '.decision' "$output/report.json")" \
     '.schema=="gooo/reflexive-loop/modern-cycle/ci-artifact/v1" and .decision==$expected and .authority=={repository_writes:0,local_test_executions:0,cross_project_required_gates:0,apply_authorized:false,commit_authorized:false,push_authorized:false,pull_request_authorized:false,merge_authorized:false}' \
-    "$output/ci-artifact.json" >/dev/null
+    "$output/ci-artifact.json" >/dev/null; then
+    echo "ci-artifact assertion failed: $scenario" >&2
+    if [ -f "$output/ci-artifact.json" ]; then jq '{schema,decision,authority,metrics}' "$output/ci-artifact.json" >&2 || true; fi
+    return 1
+  fi
   if [ "$class" = "unknown" ]; then
     if ! jq -e '(.unknowns|length)==1 and ((.unknowns[0]|keys|sort)==["blocked_by","next_operation","reason","stage","step","unknown_class"]) and (.refutations|length)==0' "$output/report.json" >/dev/null; then
       echo "unknown detail assertion failed: $scenario" >&2
