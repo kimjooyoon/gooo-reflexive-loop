@@ -47,18 +47,34 @@ run_case() {
   jq -e --arg scenario "$scenario" \
     '.schema=="gooo/reflexive-loop/modern-cycle/report/v1" and .version=="v0.3.0" and .scenario==$scenario' \
     "$output/report.json" >/dev/null
-  jq -e --arg expected "$expected" \
+  if ! jq -e --arg expected "$expected" \
     '.decision==$expected and .precedence==["REFUTED","UNKNOWN","CLOSED"] and .denominator.cells==12 and .denominator.proof_totals=={FOUNDATION:4,COHERENCE:4,REGRESSION:4} and .denominator.indicator_totals=={DRIVER:4,OUTCOME:4,GUARDRAIL:4} and (.activities|length)==12 and .repository.unchanged==true and .promotion.mode=="OUTPUT_ONLY"' \
-    "$output/report.json" >/dev/null
+    "$output/report.json" >/dev/null; then
+    echo "report contract assertion failed: $scenario" >&2
+    jq '{decision,decision_reason,denominator,repository,promotion,unknowns,refutations,metrics}' "$output/report.json" >&2 || true
+    return 1
+  fi
   jq -e --arg expected "$(jq -r '.decision' "$output/report.json")" \
     '.schema=="gooo/reflexive-loop/modern-cycle/ci-artifact/v1" and .decision==$expected and .authority=={repository_writes:0,local_test_executions:0,cross_project_required_gates:0,apply_authorized:false,commit_authorized:false,push_authorized:false,pull_request_authorized:false,merge_authorized:false}' \
     "$output/ci-artifact.json" >/dev/null
   if [ "$class" = "unknown" ]; then
-    jq -e '(.unknowns|length)==1 and ((.unknowns[0]|keys|sort)==["blocked_by","next_operation","reason","stage","step","unknown_class"]) and (.refutations|length)==0' "$output/report.json" >/dev/null
+    if ! jq -e '(.unknowns|length)==1 and ((.unknowns[0]|keys|sort)==["blocked_by","next_operation","reason","stage","step","unknown_class"]) and (.refutations|length)==0' "$output/report.json" >/dev/null; then
+      echo "unknown detail assertion failed: $scenario" >&2
+      jq '{decision,unknowns,refutations,activities}' "$output/report.json" >&2 || true
+      return 1
+    fi
   elif [ "$class" = "refuted" ]; then
-    jq -e '(.unknowns|length)==0 and (.refutations|length)>0 and all(.activities[]; .state=="REFUTED")' "$output/report.json" >/dev/null
+    if ! jq -e '(.unknowns|length)==0 and (.refutations|length)>0 and all(.activities[]; .state=="REFUTED")' "$output/report.json" >/dev/null; then
+      echo "refuted detail assertion failed: $scenario" >&2
+      jq '{decision,unknowns,refutations,activities}' "$output/report.json" >&2 || true
+      return 1
+    fi
   else
-    jq -e '(.unknowns|length)==0 and (.refutations|length)==0 and all(.activities[]; .state=="CLOSED" or .state=="UNKNOWN")' "$output/report.json" >/dev/null
+    if ! jq -e '(.unknowns|length)==0 and (.refutations|length)==0 and all(.activities[]; .state=="CLOSED" or .state=="UNKNOWN")' "$output/report.json" >/dev/null; then
+      echo "normal detail assertion failed: $scenario" >&2
+      jq '{decision,unknowns,refutations,activities}' "$output/report.json" >&2 || true
+      return 1
+    fi
   fi
   echo "observed modern-cycle scenario: $scenario decision=$(jq -r '.decision' "$output/report.json")"
 }
