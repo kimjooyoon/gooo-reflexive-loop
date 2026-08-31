@@ -1,0 +1,29 @@
+package moderncycle
+namespace moderncycle
+
+entity ImmutableLedger id "gooo://reflexive-loop/modern-cycle/immutable-ledger"
+entity BaselineDefect id "gooo://reflexive-loop/modern-cycle/baseline-defect"
+entity ToolchainContractBinding id "gooo://reflexive-loop/modern-cycle/toolchain-contract-binding"
+entity ModernActivityBinding id "gooo://reflexive-loop/modern-cycle/modern-activity-binding"
+entity BoundedCandidate id "gooo://reflexive-loop/modern-cycle/bounded-candidate"
+entity ExecutionFrontier id "gooo://reflexive-loop/modern-cycle/execution-frontier"
+entity ChangeBundle id "gooo://reflexive-loop/modern-cycle/change-bundle"
+entity DisposableClone id "gooo://reflexive-loop/modern-cycle/disposable-clone"
+entity TestFrontier id "gooo://reflexive-loop/modern-cycle/test-frontier"
+entity OraclePair id "gooo://reflexive-loop/modern-cycle/oracle-pair"
+entity BoundaryReceipt id "gooo://reflexive-loop/modern-cycle/boundary-receipt"
+entity PromotionReceipt id "gooo://reflexive-loop/modern-cycle/promotion-receipt"
+entity EvidenceState id "gooo://reflexive-loop/modern-cycle/evidence-state"
+
+activity ObserveImmutableLedger(ImmutableLedger) -> EvidenceState
+activity BindBaselineDefect(BaselineDefect) -> EvidenceState
+activity BindToolchainAndContract(ToolchainContractBinding) -> EvidenceState
+activity ResolveModernCycleActivities(ModernActivityBinding) -> EvidenceState
+activity ProposeBoundedCandidate(BoundedCandidate) -> EvidenceState
+activity ComputeExecutionFrontier(ExecutionFrontier) -> EvidenceState
+activity MaterializeDeterministicChangeBundle(ChangeBundle) -> EvidenceState
+activity ApplyDisposablePatch(DisposableClone) -> EvidenceState
+activity SelectImpactedTests(TestFrontier) -> EvidenceState
+activity CompareExactOraclePair(OraclePair) -> EvidenceState
+activity PreserveRollbackAndReplay(BoundaryReceipt) -> EvidenceState
+activity EmitPromotionReceipt(PromotionReceipt) -> EvidenceState
