@@ -45,8 +45,11 @@ policy_digest=$(sha256sum "$denominator" | awk '{print "sha256:" $1}')
 inventory_digest=$(sha256sum "$test_inventory" | awk '{print "sha256:" $1}')
 
 snapshot() {
-  find "$1" -path "$1/.git" -prune -o -type f -print0 |
-    sort -z | xargs -0 -r sha256sum | sha256sum | awk '{print "sha256:" $1}'
+  (
+    cd "$1"
+    find . -path './.git' -prune -o -type f -print0 |
+      sort -z | xargs -0 -r sha256sum
+  ) | sha256sum | awk '{print "sha256:" $1}'
 }
 
 digest_file() {
