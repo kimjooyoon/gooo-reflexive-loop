@@ -1,0 +1,129 @@
+name: Reflexive loop conformance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Use Go 1.27
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.x'
+
+      - name: Observe Go runtime
+        run: go version
+
+      - name: Download pinned Gooo release
+        shell: bash
+        run: |
+          set -euo pipefail
+          lock="$GITHUB_WORKSPACE/contracts/gooo-release-lock-v1.json"
+          repository=$(jq -r '.repository' "$lock")
+          tag=$(jq -r '.tag' "$lock")
+          expected_tag_object=$(jq -r '.tag_object_sha' "$lock")
+          expected_target=$(jq -r '.target_commit_sha' "$lock")
+          asset_name=$(jq -r '.assets[0].name' "$lock")
+          expected_digest=$(jq -r '.assets[0].sha256' "$lock")
+
+          gh api "repos/$repository/git/ref/tags/$tag" > "$RUNNER_TEMP/tag-ref.json"
+          jq -e --arg sha "$expected_tag_object" '.object.type=="tag" and .object.sha==$sha' "$RUNNER_TEMP/tag-ref.json" >/dev/null
+          gh api "repos/$repository/git/tags/$expected_tag_object" > "$RUNNER_TEMP/tag-object.json"
+          jq -e --arg sha "$expected_target" '.object.type=="commit" and .object.sha==$sha' "$RUNNER_TEMP/tag-object.json" >/dev/null
+          gh api "repos/$repository/releases/tags/$tag" > "$RUNNER_TEMP/release.json"
+          asset_id=$(jq -r --arg name "$asset_name" '.assets[]|select(.name==$name)|.id' "$RUNNER_TEMP/release.json")
+          test -n "$asset_id"
+          archive="$RUNNER_TEMP/$asset_name"
+          gh api -H 'Accept: application/octet-stream' "repos/$repository/releases/assets/$asset_id" > "$archive"
+          printf '%s  %s\n' "$expected_digest" "$archive" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/gooo"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/gooo"
+          chmod +x "$RUNNER_TEMP/gooo/gooo"
+          echo "GOOO_BIN=$RUNNER_TEMP/gooo/gooo" >> "$GITHUB_ENV"
+
+      - name: Run all loop scenarios
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/gooo-reflexive-loop-evidence"
+          mkdir -p "$evidence"
+          build_start_ns=$(date +%s%N)
+          /usr/bin/time -f '%e\t%M' -o "$RUNNER_TEMP/build-time.tsv" \
+            "$GOOO_BIN" graph dump "$GITHUB_WORKSPACE/examples/reflexive-loop/main.gooo" > "$RUNNER_TEMP/build-graph.json"
+          build_end_ns=$(date +%s%N)
+          build_wall_ms=$(( (build_end_ns - build_start_ns) / 1000000 ))
+          read -r build_seconds build_rss < "$RUNNER_TEMP/build-time.tsv"
+          test_start_ns=$(date +%s%N)
+          /usr/bin/time -f '%e\t%M' -o "$RUNNER_TEMP/test-time.tsv" \
+            "$GOOO_BIN" check --semantic --json "$GITHUB_WORKSPACE/fixtures/use-case/workload.gooo" > "$RUNNER_TEMP/test.json"
+          test_end_ns=$(date +%s%N)
+          test_wall_ms=$(( (test_end_ns - test_start_ns) / 1000000 ))
+          read -r test_seconds test_rss < "$RUNNER_TEMP/test-time.tsv"
+          start_ns=$(date +%s%N)
+          /usr/bin/time -f '%e\t%M' -o "$RUNNER_TEMP/conformance-time.tsv" \
+            bash scripts/conform.sh "$GOOO_BIN" "$GITHUB_WORKSPACE" "$evidence"
+          end_ns=$(date +%s%N)
+          wall_ms=$(( (end_ns - start_ns) / 1000000 ))
+          read -r seconds rss < "$RUNNER_TEMP/conformance-time.tsv"
+          conformance_rss=${rss:-0}
+          jq -S --argjson wall_ms "$wall_ms" --argjson rss "$conformance_rss" \
+            --argjson build_wall_ms "$build_wall_ms" --argjson build_rss "${build_rss:-0}" \
+            --argjson test_wall_ms "$test_wall_ms" --argjson test_rss "${test_rss:-0}" \
+            '.performance={build_wall_ms:$build_wall_ms,build_peak_rss_kib:$build_rss,test_wall_ms:$test_wall_ms,test_peak_rss_kib:$test_rss,conformance_wall_ms:$wall_ms,conformance_peak_rss_kib:$rss}' \
+            "$evidence/conformance.json" > "$RUNNER_TEMP/conformance.json"
+          mv "$RUNNER_TEMP/conformance.json" "$evidence/conformance.json"
+          jq -S --argjson wall_ms "$wall_ms" --argjson rss "$conformance_rss" \
+            --argjson build_wall_ms "$build_wall_ms" --argjson build_rss "${build_rss:-0}" \
+            --argjson test_wall_ms "$test_wall_ms" --argjson test_rss "${test_rss:-0}" \
+            '.performance.build_wall_ms=$build_wall_ms | .performance.build_peak_rss_kib=$build_rss | .performance.test_wall_ms=$test_wall_ms | .performance.test_peak_rss_kib=$test_rss | .performance.conformance_wall_ms=$wall_ms | .performance.conformance_peak_rss_kib=$rss' \
+            "$evidence/scenarios/normal/ci-artifact.json" > "$RUNNER_TEMP/normal-ci-artifact.json"
+          mv "$RUNNER_TEMP/normal-ci-artifact.json" "$evidence/scenarios/normal/ci-artifact.json"
+
+      - name: Check human-readable evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/gooo-reflexive-loop-evidence"
+          jq -e '
+            .schema=="gooo/reflexive-loop/conformance/v1" and
+            .tests=={executed:9,reused:0,skipped:0} and
+            ([.scenarios[].decision]|sort)==["FAIL_CLOSED","FAIL_CLOSED","FAIL_CLOSED","FAIL_CLOSED","FAIL_CLOSED","FAIL_CLOSED","FAIL_CLOSED","PROMOTED","UNKNOWN"] and
+            .performance.conformance_wall_ms >= 0 and .performance.conformance_peak_rss_kib >= 0
+          ' "$evidence/conformance.json" >/dev/null
+          jq -e '
+            .schema=="gooo/reflexive-loop/ci-artifact/v1" and
+            .decision=="PROMOTED" and .summary=={total:18,closed:18,unknown:0,refuted:0,direct_missing:0,dependency_blocked:0} and
+            .repository_unchanged==true and .repository_writes==0 and
+            .artifact.files>0 and .artifact.bytes>0 and
+            .performance.before.wall_ms>=0 and .performance.after.wall_ms>=0 and
+            (.metrics|length)==18 and .bindings.one_to_one==true
+          ' "$evidence/scenarios/normal/ci-artifact.json" >/dev/null
+          jq -e 'all(.metrics[]; .denominator==1 and (.numerator|type)=="number" and .activity != null and .source_file=="examples/reflexive-loop/main.gooo" and .ir_node_kind=="Activity" and .generated_artifact != null and .evaluator != null)' "$evidence/scenarios/normal/ci-artifact.json" >/dev/null
+          cat "$evidence/scenarios/normal/ci-artifact.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload loop evidence
+        id: evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gooo-reflexive-loop-evidence
+          path: ${{ runner.temp }}/gooo-reflexive-loop-evidence
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Record artifact identity
+        run: |
+          {
+            echo "### Evidence artifact"
+            echo "artifact_id: ${{ steps.evidence.outputs.artifact-id }}"
+            echo "artifact_digest: ${{ steps.evidence.outputs.artifact-digest }}"
+          } >> "$GITHUB_STEP_SUMMARY"

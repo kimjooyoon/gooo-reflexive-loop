@@ -1,0 +1,18 @@
+{
+  "schema": "gooo/reflexive-loop/claim/v1",
+  "id": "claim-normal-v1",
+  "state": "CLOSED",
+  "stage": "OBSERVE",
+  "step": "ACCEPT_CLAIM",
+  "reason": "CLAIM_ACCEPTED",
+  "target": "fixtures/use-case/workload.gooo",
+  "requested_change": "canonicalize-workload-source",
+  "contract_digest": "sha256:6e69194e9712906fb6ec0c6b56998e50288e4ff20c9c13dbe551d064ce3ce5b7",
+  "caller": "ci-runner",
+  "approver": "independent-guardian",
+  "authority": {
+    "requested_scope": "temporary_output",
+    "input_repository_writes": false,
+    "promotion_rights": false
+  }
+}

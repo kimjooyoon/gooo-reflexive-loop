@@ -1,0 +1,9 @@
+package workload
+namespace workload
+
+entity WorkItem id "gooo://reflexive-loop/workload/work-item"
+entity WorkItemResult id "gooo://reflexive-loop/workload/work-item-result"
+
+
+activity ParseWorkItem(WorkItem) -> WorkItemResult
+activity ValidateWorkItem(WorkItem) -> WorkItemResult
