@@ -431,7 +431,7 @@ while IFS=$'\t' read -r cell state activity reason; do
   [ "$state" = "CLOSED" ] && numerator=1
   jq -S -n --arg cell "$cell" --arg state "$state" --arg activity "$activity" --arg reason "$reason" \
     --arg source_digest "$source_digest" --argjson numerator "$numerator" \
-    '{schema:"gooo/reflexive-loop/integrated-metric/v1",id:("gooo.metric.reflexive.integration." + ($cell|ascii_downcase|gsub("_";"-"))),cell:$cell,activity:$activity,source_file:"examples/reflexive-loop/main.gooo",source_digest:$source_digest,ir_node_kind:"Activity",generated_artifact:"integration/metrics/" + ($cell|ascii_downcase|gsub("_";"-")) + ".json",evaluator:"scripts/integrated-loop.sh",numerator:$numerator,denominator:1,state:$state,reason:$reason}' \
+    '{schema:"gooo/reflexive-loop/integrated-metric/v1",id:("gooo.metric.reflexive.integration." + ($cell|ascii_downcase|gsub("_";"-"))),cell:$cell,activity:$activity,source_file:"examples/reflexive-loop/main.gooo",source_digest:$source_digest,ir_node_kind:"Activity",generated_artifact:("integration/metrics/" + ($cell|ascii_downcase|gsub("_";"-")) + ".json"),evaluator:"scripts/integrated-loop.sh",numerator:$numerator,denominator:1,state:$state,reason:$reason}' \
     > "$output/metrics/$(printf '%s' "$cell" | tr '[:upper:]' '[:lower:]' | tr '_' '-').json"
 done < <(jq -r '.cells[]|[.id,.state,.activity,.reason]|@tsv' "$output/report.json")
 
