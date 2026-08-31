@@ -56,6 +56,7 @@ jobs:
         run: |
           set -euo pipefail
           lock="$GITHUB_WORKSPACE/contracts/external-release-locks-v1.json"
+          receipt_cache="$GITHUB_WORKSPACE/contracts/immutable-release-receipt-cache-v1.json"
           external="$RUNNER_TEMP/gooo-reflexive-loop-external-inputs"
           mkdir -p "$external"
 
@@ -99,9 +100,20 @@ jobs:
             test "$asset_digest" = "$expected_digest"
             test "$asset_size" -eq "$expected_size"
             if ! gh api -H 'Accept: application/octet-stream' "repos/$repository/releases/assets/$asset_id" > "$output"; then
-              wget --server-response \
+              if ! wget --server-response \
                 --header='Accept: application/octet-stream' \
-                "https://github.com/$repository/releases/download/$tag/$asset_name?download=1" -O "$output"
+                "https://github.com/$repository/releases/download/$tag/$asset_name?download=1" -O "$output"; then
+                cached=$(jq -r --arg repo "$repository" --arg name "$asset_name" '
+                  if $repo=="kimjooyoon/gooo-causal-ci" and $name=="consumer-manifest-v0.1.0.json" then .releases.causal_ci.assets.manifest.base64
+                  elif $repo=="kimjooyoon/gooo-causal-ci" and $name=="gooo-causal-ci-evidence-v0.1.0.tar.gz" then .releases.causal_ci.assets.evidence.base64
+                  elif $repo=="kimjooyoon/gooo-causal-ci" and $name=="SHA256SUMS-v0.1.0.txt" then .releases.causal_ci.assets.checksum.base64
+                  elif $repo=="kimjooyoon/gooo-denominator-protocol" and $name=="gooo-denominator-protocol-v0.1.0-consumer-manifest.json" then .releases.denominator_protocol.assets.manifest.base64
+                  elif $repo=="kimjooyoon/gooo-denominator-protocol" and $name=="gooo-denominator-protocol-v0.1.0-evidence.tar.gz" then .releases.denominator_protocol.assets.evidence.base64
+                  elif $repo=="kimjooyoon/gooo-denominator-protocol" and $name=="gooo-denominator-protocol-v0.1.0-checksums-sha256.txt" then .releases.denominator_protocol.assets.checksum.base64
+                  else empty end' "$receipt_cache")
+                test -n "$cached"
+                printf '%s' "$cached" | base64 --decode > "$output"
+              fi
             fi
             printf '%s  %s\n' "${expected_digest#sha256:}" "$output" | sha256sum -c -
             test "$(wc -c < "$output" | awk '{print $1 + 0}')" -eq "$expected_size"
@@ -154,6 +166,8 @@ jobs:
           causal_checksum_digest=$(jq -r '.releases.causal_ci.checksum.sha256' "$lock")
           causal_checksum_size=$(jq -r '.releases.causal_ci.checksum.size_bytes' "$lock")
           causal_checksum_id=$(jq -r '.releases.causal_ci.checksum.asset_id' "$lock")
+          causal_live_target=$(git ls-remote "https://github.com/$causal_repo.git" "refs/tags/$causal_tag" | awk '$2=="refs/tags/'"$causal_tag"'" {print $1}')
+          test "$causal_live_target" = "$causal_target"
           jq -S -n --arg repo "$causal_repo" --arg tag "$causal_tag" --arg target "$causal_target" \
             --arg manifest_name "$causal_manifest_name" --arg manifest_digest "$causal_manifest_digest" --argjson manifest_size "$causal_manifest_size" \
             --arg evidence_name "$causal_evidence_name" --arg evidence_digest "$causal_evidence_digest" --argjson evidence_size "$causal_evidence_size" \
@@ -185,6 +199,8 @@ jobs:
           denominator_checksum_digest=$(jq -r '.releases.denominator_protocol.checksum.sha256' "$lock")
           denominator_checksum_size=$(jq -r '.releases.denominator_protocol.checksum.size_bytes' "$lock")
           denominator_checksum_id=$(jq -r '.releases.denominator_protocol.checksum.asset_id' "$lock")
+          denominator_live_target=$(git ls-remote "https://github.com/$denominator_repo.git" "refs/tags/$denominator_tag" | awk '$2=="refs/tags/'"$denominator_tag"'" {print $1}')
+          test "$denominator_live_target" = "$denominator_target"
           jq -S -n --arg repo "$denominator_repo" --arg tag "$denominator_tag" --arg target "$denominator_target" \
             --arg manifest_name "$denominator_manifest_name" --arg manifest_digest "$denominator_manifest_digest" --argjson manifest_size "$denominator_manifest_size" \
             --arg evidence_name "$denominator_evidence_name" --arg evidence_digest "$denominator_evidence_digest" --argjson evidence_size "$denominator_evidence_size" \
