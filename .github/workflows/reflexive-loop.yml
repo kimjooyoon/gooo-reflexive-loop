@@ -149,7 +149,7 @@ jobs:
             '.performance.build_wall_ms=$build_wall_ms | .performance.build_peak_rss_kib=$build_rss | .performance.test_wall_ms=$test_wall_ms | .performance.test_peak_rss_kib=$test_rss | .performance.conformance_wall_ms=$wall_ms | .performance.conformance_peak_rss_kib=$rss' \
             "$evidence/scenarios/normal/ci-artifact.json" > "$RUNNER_TEMP/normal-ci-artifact.json"
           mv "$RUNNER_TEMP/normal-ci-artifact.json" "$evidence/scenarios/normal/ci-artifact.json"
-          bash -x scripts/integration-conform.sh "$GOOO_BIN" "$GITHUB_WORKSPACE" "$RUNNER_TEMP/gooo-reflexive-loop-external-inputs" "$evidence/integration"
+          bash scripts/integration-conform.sh "$GOOO_BIN" "$GITHUB_WORKSPACE" "$RUNNER_TEMP/gooo-reflexive-loop-external-inputs" "$evidence/integration"
 
       - name: Check human-readable evidence
         shell: bash
