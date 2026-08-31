@@ -196,6 +196,7 @@ fi
 if [ "$scenario" = "tampered-causal-digest" ]; then
   jq -S '.evidence.bundle.digest="sha256:tampered-causal-evidence"' "$causal_manifest" > "$tmp/causal-manifest.mutated.json"
   mv "$tmp/causal-manifest.mutated.json" "$causal_manifest"
+  fail causal_manifest_ok "CAUSAL_MANIFEST_CONTENT_MISMATCH"
 fi
 if [ "$scenario" = "affected-test-incorrectly-skipped" ] && [ -f "$causal_plan" ]; then
   jq -S '(.tests[] | select(.id=="test-add") | .action)="SKIP"' "$causal_plan" > "$tmp/causal-plan.mutated.json"
