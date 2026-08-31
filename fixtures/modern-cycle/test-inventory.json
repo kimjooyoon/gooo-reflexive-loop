@@ -1,0 +1,9 @@
+{
+  "schema": "gooo/reflexive-loop/modern-cycle/test-inventory/v1",
+  "tests": [
+    {"test_id":"test-parse-work-item","target_node":"test:parse-work-item","policy":"REQUIRED"},
+    {"test_id":"test-validate-work-item","target_node":"test:validate-work-item","policy":"REQUIRED"},
+    {"test_id":"test-documentation","target_node":"test:documentation","policy":"REQUIRED"},
+    {"test_id":"test-optional-lint","target_node":"test:optional-lint","policy":"SKIP"}
+  ]
+}

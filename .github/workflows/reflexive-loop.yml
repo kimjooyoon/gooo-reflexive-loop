@@ -112,6 +112,148 @@ jobs:
           fetch_release_asset "$external/lattice-release.json" "$lattice_repo" "$lattice_manifest_name" "$lattice_manifest_digest" "$lattice_manifest_size" "$external/lattice-manifest.json"
           fetch_release_asset "$external/lattice-release.json" "$lattice_repo" "$lattice_evidence_name" "$lattice_evidence_digest" "$lattice_evidence_size" "$external/lattice-evidence.zip"
 
+      - name: Download and build exact v0.3 upstream releases
+        shell: bash
+        run: |
+          set -euo pipefail
+          lock="$GITHUB_WORKSPACE/contracts/modern-cycle-upstream-release-lock-v1.json"
+          upstream="$RUNNER_TEMP/gooo-modern-cycle-upstream"
+          mkdir -p "$upstream"
+
+          fetch_component() {
+            local key=$1
+            local repository
+            local tag
+            local release_id
+            local tag_object
+            local target_commit
+            local dir="$upstream/$key"
+            mkdir -p "$dir/assets" "$dir/source" "$dir/bin"
+            repository=$(jq -r --arg key "$key" '.releases[$key].repository' "$lock")
+            tag=$(jq -r --arg key "$key" '.releases[$key].tag' "$lock")
+            release_id=$(jq -r --arg key "$key" '.releases[$key].release_id' "$lock")
+            tag_object=$(jq -r --arg key "$key" '.releases[$key].tag_object_sha' "$lock")
+            target_commit=$(jq -r --arg key "$key" '.releases[$key].target_commit_sha' "$lock")
+            gh api "repos/$repository/releases/tags/$tag" > "$dir/release.json"
+            jq -e --arg tag "$tag" --argjson release_id "$release_id" '.immutable==true and .tag_name==$tag and .id==$release_id' "$dir/release.json" >/dev/null
+            gh api "repos/$repository/git/ref/tags/$tag" > "$dir/tag-ref.json"
+            jq -e --arg sha "$tag_object" '.object.type=="tag" and .object.sha==$sha' "$dir/tag-ref.json" >/dev/null
+            gh api "repos/$repository/git/tags/$tag_object" > "$dir/tag-object.json"
+            jq -e --arg sha "$target_commit" '.object.type=="commit" and .object.sha==$sha' "$dir/tag-object.json" >/dev/null
+            while IFS= read -r asset; do
+              local asset_id
+              local asset_name
+              local asset_size
+              local asset_digest
+              local output
+              asset_id=$(jq -r '.id' <<<"$asset")
+              asset_name=$(jq -r '.name' <<<"$asset")
+              asset_size=$(jq -r '.size' <<<"$asset")
+              asset_digest=$(jq -r '.digest' <<<"$asset")
+              jq -e --arg name "$asset_name" --argjson id "$asset_id" --argjson size "$asset_size" --arg digest "$asset_digest" \
+                '[.assets[]|select(.id==$id and .name==$name and .size==$size and .digest==$digest)]|length==1' "$dir/release.json" >/dev/null
+              output="$dir/assets/$asset_name"
+              gh api -H 'Accept: application/octet-stream' "repos/$repository/releases/assets/$asset_id" > "$output"
+              printf '%s  %s\n' "${asset_digest#sha256:}" "$output" | sha256sum -c -
+              test "$(wc -c < "$output" | awk '{print $1 + 0}')" -eq "$asset_size"
+            done < <(jq -c --arg key "$key" '.releases[$key].assets[]' "$lock")
+          }
+
+          fetch_component proposer
+          fetch_component frontier
+          fetch_component change_bundle
+          fetch_component test_frontier
+
+          proposer_archive="$upstream/proposer/assets/$(jq -r '.releases.proposer.assets[]|select(.name|endswith(".tar.gz") and contains("proposer-v"))|.name' "$lock")"
+          frontier_archive="$upstream/frontier/assets/$(jq -r '.releases.frontier.assets[]|select(.name|endswith(".tar.gz"))|.name' "$lock")"
+          change_archive="$upstream/change_bundle/assets/$(jq -r '.releases.change_bundle.assets[]|select(.name|endswith(".tar.gz") and contains("change-bundle-v"))|.name' "$lock")"
+          test_archive="$upstream/test_frontier/assets/$(jq -r '.releases.test_frontier.assets[]|select(.name|endswith(".tar.gz"))|.name' "$lock")"
+          tar -xzf "$proposer_archive" -C "$upstream/proposer/source"
+          tar -xzf "$frontier_archive" -C "$upstream/frontier/source"
+          tar -xzf "$change_archive" -C "$upstream/change_bundle/source"
+          tar -xzf "$test_archive" -C "$upstream/test_frontier/source"
+
+          build_component() {
+            local key=$1
+            local package=$2
+            local dir="$upstream/$key"
+            local start_ns
+            local end_ns
+            start_ns=$(date +%s%N)
+            /usr/bin/time -f '%e\t%M' -o "$dir/build-time.tsv" bash -c "cd '$3' && go build -o '$dir/bin/$4' '$package'"
+            end_ns=$(date +%s%N)
+            jq -S -n --argjson wall_ms "$(( (end_ns - start_ns) / 1000000 ))" --argjson rss "$(awk '{print $2 + 0}' "$dir/build-time.tsv")" '{wall_ms:$wall_ms,peak_rss_kib:$rss}' > "$dir/build-metric.json"
+          }
+
+          build_component proposer ./cmd/gooo-improvement-proposer "$upstream/proposer/source/gooo-improvement-proposer-v0.1.1" proposer
+          build_component frontier ./cmd/gooo-improvement-frontier "$upstream/frontier/source/gooo-improvement-frontier-v0.1.0" frontier
+          build_component change_bundle ./cmd/gooo-change-bundle "$upstream/change_bundle/source" change-bundle
+          build_component test_frontier ./cmd/gooo-test-frontier "$upstream/test_frontier/source/gooo-test-frontier-v0.1.1" test-frontier
+          build_wall_ms=$(jq -s 'map(.wall_ms)|add' "$upstream"/*/build-metric.json)
+          build_peak_rss_kib=$(jq -s 'map(.peak_rss_kib)|max' "$upstream"/*/build-metric.json)
+          jq -S -n --argjson build_wall_ms "$build_wall_ms" --argjson build_peak_rss_kib "$build_peak_rss_kib" '{build_wall_ms:$build_wall_ms,build_peak_rss_kib:$build_peak_rss_kib}' > "$upstream/build-metrics.json"
+          {
+            echo "MODERN_UPSTREAM_ROOT=$upstream"
+            echo "MODERN_PROPOSER_BIN=$upstream/proposer/bin/proposer"
+            echo "MODERN_FRONTIER_BIN=$upstream/frontier/bin/frontier"
+            echo "MODERN_CHANGE_BUNDLE_BIN=$upstream/change_bundle/bin/change-bundle"
+            echo "MODERN_TEST_FRONTIER_BIN=$upstream/test_frontier/bin/test-frontier"
+          } >> "$GITHUB_ENV"
+
+      - name: Run v0.3 modern self-improvement cycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/gooo-reflexive-loop-evidence/modern-cycle"
+          mkdir -p "$evidence"
+          start_ns=$(date +%s%N)
+          /usr/bin/time -f '%e\t%M' -o "$RUNNER_TEMP/modern-cycle-time.tsv" \
+            bash scripts/modern-cycle-conform.sh "$GOOO_BIN" "$MODERN_PROPOSER_BIN" "$MODERN_FRONTIER_BIN" "$MODERN_CHANGE_BUNDLE_BIN" "$MODERN_TEST_FRONTIER_BIN" "$GITHUB_WORKSPACE" "$MODERN_UPSTREAM_ROOT" "$evidence"
+          end_ns=$(date +%s%N)
+          wall_ms=$(( (end_ns - start_ns) / 1000000 ))
+          read -r seconds rss < "$RUNNER_TEMP/modern-cycle-time.tsv"
+          jq -S --argjson wall_ms "$wall_ms" --argjson rss "${rss:-0}" \
+            '.performance.build_wall_ms=(input.build_wall_ms // 0) | .performance.build_peak_rss_kib=(input.build_peak_rss_kib // 0) | .performance.conformance_wall_ms=$wall_ms | .performance.conformance_peak_rss_kib=$rss' \
+            "$evidence/modern-cycle-conformance.json" "$MODERN_UPSTREAM_ROOT/build-metrics.json" > "$RUNNER_TEMP/modern-cycle-conformance.json"
+          mv "$RUNNER_TEMP/modern-cycle-conformance.json" "$evidence/modern-cycle-conformance.json"
+          for report in "$evidence"/scenarios/*/report.json; do
+            jq -S --argjson wall_ms "$wall_ms" --argjson rss "${rss:-0}" \
+              '.metrics.conformance_wall_ms=$wall_ms | .performance.conformance_wall_ms=$wall_ms | .performance.conformance_peak_rss_kib=$rss' \
+              "$report" > "$RUNNER_TEMP/modern-cycle-report.json"
+            mv "$RUNNER_TEMP/modern-cycle-report.json" "$report"
+            artifact="${report%/report.json}/ci-artifact.json"
+            digest=$(sha256sum "$report" | awk '{print "sha256:" $1}')
+            jq -S --arg digest "$digest" --argjson wall_ms "$wall_ms" --argjson rss "${rss:-0}" \
+              '.report_digest=$digest | .metrics.conformance_wall_ms=$wall_ms | .metrics.conformance_peak_rss_kib=$rss' \
+              "$artifact" > "$RUNNER_TEMP/modern-cycle-artifact.json"
+            mv "$RUNNER_TEMP/modern-cycle-artifact.json" "$artifact"
+          done
+          cat "$evidence/modern-cycle-conformance.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check v0.3 modern cycle evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/gooo-reflexive-loop-evidence/modern-cycle"
+          jq -e '
+            .schema=="gooo/reflexive-loop/modern-cycle/conformance/v1" and
+            .version=="v0.3.0" and .scenario_counts=={normal:3,unknown:3,refuted:4} and
+            .precedence==["REFUTED","UNKNOWN","CLOSED"] and
+            .performance.build_wall_ms>=0 and .performance.conformance_wall_ms>=0
+          ' "$evidence/modern-cycle-conformance.json" >/dev/null
+          jq -e '
+            .decision=="CLOSED" and .metrics.before_oracle_failures==1 and .metrics.after_oracle_failures==0 and
+            .metrics.candidate_count==1 and .metrics.patch_paths==1 and .metrics.patch_hunks==1 and
+            .metrics.rollback_comparisons==1 and .metrics.rollback_mismatches==0 and
+            .metrics.tests_total==4 and .metrics.tests_executed==2 and .metrics.tests_reused==1 and
+            .metrics.tests_skipped==1 and .metrics.tests_not_observed==0 and
+            .semantic_close.state=="CLOSED" and .external_utility.state=="UNKNOWN" and
+            .promotion.state=="PROMOTED_OUTPUT_ONLY" and .repository.unchanged==true and
+            all(.activities[]; .ordinal>=1 and .ordinal<=12)
+          ' "$evidence/scenarios/normal-candidate/report.json" >/dev/null
+          jq -e '.decision=="UNKNOWN" and .unknowns[0].unknown_class=="TEST_EXECUTION_NOT_OBSERVED" and .metrics.tests_not_observed==1' "$evidence/scenarios/missing-utility/report.json" >/dev/null
+          jq -e '.decision=="REFUTED" and (.refutations|index("FALSE_NEGATIVE_COUNTEREXAMPLE_PRESENT"))!=null' "$evidence/scenarios/false-negative-test-selection/report.json" >/dev/null
+
       - name: Run all loop scenarios
         shell: bash
         run: |

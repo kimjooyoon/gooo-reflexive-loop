@@ -1,0 +1,35 @@
+{
+  "schema": "gooo/test-frontier/protocol/v1/fixture/v1",
+  "case_id": "modern-cycle-test-frontier",
+  "description": "The candidate selects exact affected tests while preserving explicit reuse, skip, and not-observed statuses.",
+  "input_bindings": {
+    "source_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "toolchain_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "policy_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "test_inventory_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+    "semantic_change_graph_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+    "cache_hit": false
+  },
+  "semantic_change_graph": {
+    "schema": "gooo/test-frontier/protocol/v1/semantic-change-graph/v1",
+    "graph_id": "modern-cycle-test-graph",
+    "changed_units": ["candidate/modern-cycle.validate-work-item"],
+    "edges": [
+      {"edge_id":"edge-candidate-component","from":"candidate/modern-cycle.validate-work-item","to":"component:modern-cycle","kind":"candidate-to-component"},
+      {"edge_id":"edge-component-parse","from":"component:modern-cycle","to":"test:parse-work-item","kind":"component-to-test"},
+      {"edge_id":"edge-component-validate","from":"component:modern-cycle","to":"test:validate-work-item","kind":"component-to-test"}
+    ]
+  },
+  "tests": [
+    {"test_id":"test-parse-work-item","operation_id":"go.test/TestParseWorkItem","target_node":"test:parse-work-item","source_digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","policy":"REQUIRED","simulation":{"observed":true,"wall_ms":14,"peak_rss_kib":128,"result":"PASS","result_digest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+    {"test_id":"test-validate-work-item","operation_id":"go.test/TestValidateWorkItem","target_node":"test:validate-work-item","source_digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","policy":"REQUIRED","simulation":{"observed":true,"wall_ms":16,"peak_rss_kib":132,"result":"PASS","result_digest":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}},
+    {"test_id":"test-documentation","operation_id":"go.test/TestDocumentation","target_node":"test:documentation","source_digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","policy":"REQUIRED"},
+    {"test_id":"test-optional-lint","operation_id":"go.test/TestOptionalLint","target_node":"test:optional-lint","source_digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","policy":"SKIP"}
+  ],
+  "prior_receipts": [
+    {"receipt_id":"receipt-documentation","test_id":"test-documentation","source_digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","toolchain_digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","policy_digest":"sha256:3333333333333333333333333333333333333333333333333333333333333333","test_inventory_digest":"sha256:4444444444444444444444444444444444444444444444444444444444444444","terminal_result":"PASS","result_digest":"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","wall_ms":42,"peak_rss_kib":144,"immutable":true}
+  ],
+  "counterexamples": [],
+  "evidence_timing": {"lookup_ms": 2, "verification_ms": 4},
+  "expected": {"state":"CLOSED","test_counts":{"total":4,"executed":2,"reused":1,"skipped":1,"not_observed":0},"invalidated_edge_count":3,"economy_state":"UNKNOWN"}
+}
