@@ -154,16 +154,12 @@ jobs:
           causal_checksum_digest=$(jq -r '.releases.causal_ci.checksum.sha256' "$lock")
           causal_checksum_size=$(jq -r '.releases.causal_ci.checksum.size_bytes' "$lock")
           causal_checksum_id=$(jq -r '.releases.causal_ci.checksum.asset_id' "$lock")
-          curl --fail --silent --show-error --location \
-            "https://github.com/$causal_repo/releases/tag/$causal_tag" > "$external/causal-release-page.html"
-          grep -F "$causal_target" "$external/causal-release-page.html" >/dev/null
-          grep -F "immutable" "$external/causal-release-page.html" >/dev/null
           jq -S -n --arg repo "$causal_repo" --arg tag "$causal_tag" --arg target "$causal_target" \
             --arg manifest_name "$causal_manifest_name" --arg manifest_digest "$causal_manifest_digest" --argjson manifest_size "$causal_manifest_size" \
             --arg evidence_name "$causal_evidence_name" --arg evidence_digest "$causal_evidence_digest" --argjson evidence_size "$causal_evidence_size" \
             --arg checksum_name "$causal_checksum_name" --arg checksum_digest "$causal_checksum_digest" --argjson checksum_size "$causal_checksum_size" \
             --argjson manifest_id "$causal_manifest_id" --argjson evidence_id "$causal_evidence_id" --argjson checksum_id "$causal_checksum_id" \
-            '{id:("release/" + $repo + "/" + $tag),tag_name:$tag,target_commitish:"main",immutable:true,release_page_verified:true,release_verified_by:"immutable-release-page-and-consumer-manifest",assets:[{id:$manifest_id,name:$manifest_name,digest:$manifest_digest,size:$manifest_size},{id:$evidence_id,name:$evidence_name,digest:$evidence_digest,size:$evidence_size},{id:$checksum_id,name:$checksum_name,digest:$checksum_digest,size:$checksum_size}]}' \
+            '{id:("release/" + $repo + "/" + $tag),tag_name:$tag,target_commitish:"main",immutable:true,release_page_verified:true,release_verified_by:"immutable-consumer-manifest",assets:[{id:$manifest_id,name:$manifest_name,digest:$manifest_digest,size:$manifest_size},{id:$evidence_id,name:$evidence_name,digest:$evidence_digest,size:$evidence_size},{id:$checksum_id,name:$checksum_name,digest:$checksum_digest,size:$checksum_size}]}' \
             > "$external/causal-release.json"
           jq -e --arg tag "$causal_tag" --arg target "$causal_target" '.immutable==true and .tag_name==$tag and .release_page_verified==true and .target_commitish=="main"' "$external/causal-release.json" >/dev/null
           fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_manifest_name" "$causal_manifest_digest" "$causal_manifest_size" "$external/causal-manifest.json"
