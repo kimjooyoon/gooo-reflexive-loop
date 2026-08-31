@@ -11,6 +11,7 @@
       "manifest": {
         "schema": "gooo/meta-budget/release-manifest/v1",
         "asset_name": "gooo-meta-budget-v0.1.0-manifest.json",
+        "size_bytes": 1502,
         "sha256": "sha256:7ea5ab709f1daf8d130bd7d7813d5a436a613b8774b537dad9865eafb4e6ed15"
       },
       "evidence": {
@@ -40,6 +41,7 @@
       "manifest": {
         "schema": "gooo/resolution-lattice/release-manifest/v1",
         "asset_name": "consumer-manifest.json",
+        "size_bytes": 2196,
         "sha256": "sha256:1ae585501de77ff281c1a510d72174f220fee019c4f1811ed295a89627ef7b69"
       },
       "evidence": {

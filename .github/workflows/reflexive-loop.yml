@@ -51,6 +51,67 @@ jobs:
           chmod +x "$RUNNER_TEMP/gooo/gooo"
           echo "GOOO_BIN=$RUNNER_TEMP/gooo/gooo" >> "$GITHUB_ENV"
 
+      - name: Download exact external release inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          lock="$GITHUB_WORKSPACE/contracts/external-release-locks-v1.json"
+          external="$RUNNER_TEMP/gooo-reflexive-loop-external-inputs"
+          mkdir -p "$external"
+
+          fetch_release_asset() {
+            local release_file=$1
+            local repository=$2
+            local asset_name=$3
+            local expected_digest=$4
+            local expected_size=$5
+            local output=$6
+            local asset_id
+            local asset_digest
+            local asset_size
+            asset_id=$(jq -r --arg name "$asset_name" '[.assets[]|select(.name==$name)][0].id // empty' "$release_file")
+            test -n "$asset_id"
+            asset_digest=$(jq -r --arg name "$asset_name" '[.assets[]|select(.name==$name)][0].digest // empty' "$release_file")
+            asset_size=$(jq -r --arg name "$asset_name" '[.assets[]|select(.name==$name)][0].size // empty' "$release_file")
+            test "$asset_digest" = "$expected_digest"
+            test "$asset_size" -eq "$expected_size"
+            gh api -H 'Accept: application/octet-stream' "repos/$repository/releases/assets/$asset_id" > "$output"
+            printf '%s  %s\n' "${expected_digest#sha256:}" "$output" | sha256sum -c -
+            test "$(wc -c < "$output" | awk '{print $1 + 0}')" -eq "$expected_size"
+          }
+
+          budget_repo=$(jq -r '.releases.meta_budget.repository' "$lock")
+          budget_tag=$(jq -r '.releases.meta_budget.tag' "$lock")
+          budget_target=$(jq -r '.releases.meta_budget.target_commit_sha' "$lock")
+          budget_manifest_name=$(jq -r '.releases.meta_budget.manifest.asset_name' "$lock")
+          budget_manifest_size=$(jq -r '.releases.meta_budget.manifest.size_bytes' "$lock")
+          budget_manifest_digest=$(jq -r '.releases.meta_budget.manifest.sha256' "$lock")
+          budget_evidence_name=$(jq -r '.releases.meta_budget.evidence.asset_name' "$lock")
+          budget_evidence_digest=$(jq -r '.releases.meta_budget.evidence.sha256' "$lock")
+          budget_evidence_size=$(jq -r '.releases.meta_budget.evidence.size_bytes' "$lock")
+          gh api "repos/$budget_repo/releases/tags/$budget_tag" > "$external/budget-release.json"
+          jq -e --arg tag "$budget_tag" --arg target "$budget_target" \
+            '.immutable==true and .tag_name==$tag and .target_commitish==$target' \
+            "$external/budget-release.json" >/dev/null
+          fetch_release_asset "$external/budget-release.json" "$budget_repo" "$budget_manifest_name" "$budget_manifest_digest" "$budget_manifest_size" "$external/budget-manifest.json"
+          fetch_release_asset "$external/budget-release.json" "$budget_repo" "$budget_evidence_name" "$budget_evidence_digest" "$budget_evidence_size" "$external/budget-evidence.tar.gz"
+
+          lattice_repo=$(jq -r '.releases.resolution_lattice.repository' "$lock")
+          lattice_tag=$(jq -r '.releases.resolution_lattice.tag' "$lock")
+          lattice_target=$(jq -r '.releases.resolution_lattice.target_commit_sha' "$lock")
+          lattice_manifest_name=$(jq -r '.releases.resolution_lattice.manifest.asset_name' "$lock")
+          lattice_manifest_size=$(jq -r '.releases.resolution_lattice.manifest.size_bytes' "$lock")
+          lattice_manifest_digest=$(jq -r '.releases.resolution_lattice.manifest.sha256' "$lock")
+          lattice_evidence_name=$(jq -r '.releases.resolution_lattice.evidence.asset_name' "$lock")
+          lattice_evidence_digest=$(jq -r '.releases.resolution_lattice.evidence.sha256' "$lock")
+          lattice_evidence_size=$(jq -r '.releases.resolution_lattice.evidence.size_bytes' "$lock")
+          gh api "repos/$lattice_repo/releases/tags/$lattice_tag" > "$external/lattice-release.json"
+          jq -e --arg tag "$lattice_tag" --arg target "$lattice_target" \
+            '.immutable==true and .tag_name==$tag and .target_commitish==$target' \
+            "$external/lattice-release.json" >/dev/null
+          fetch_release_asset "$external/lattice-release.json" "$lattice_repo" "$lattice_manifest_name" "$lattice_manifest_digest" "$lattice_manifest_size" "$external/lattice-manifest.json"
+          fetch_release_asset "$external/lattice-release.json" "$lattice_repo" "$lattice_evidence_name" "$lattice_evidence_digest" "$lattice_evidence_size" "$external/lattice-evidence.zip"
+
       - name: Run all loop scenarios
         shell: bash
         run: |
@@ -88,6 +149,7 @@ jobs:
             '.performance.build_wall_ms=$build_wall_ms | .performance.build_peak_rss_kib=$build_rss | .performance.test_wall_ms=$test_wall_ms | .performance.test_peak_rss_kib=$test_rss | .performance.conformance_wall_ms=$wall_ms | .performance.conformance_peak_rss_kib=$rss' \
             "$evidence/scenarios/normal/ci-artifact.json" > "$RUNNER_TEMP/normal-ci-artifact.json"
           mv "$RUNNER_TEMP/normal-ci-artifact.json" "$evidence/scenarios/normal/ci-artifact.json"
+          bash scripts/integration-conform.sh "$GOOO_BIN" "$GITHUB_WORKSPACE" "$RUNNER_TEMP/gooo-reflexive-loop-external-inputs" "$evidence/integration"
 
       - name: Check human-readable evidence
         shell: bash
@@ -110,6 +172,30 @@ jobs:
           ' "$evidence/scenarios/normal/ci-artifact.json" >/dev/null
           jq -e 'all(.metrics[]; .denominator==1 and (.numerator|type)=="number" and .activity != null and .source_file=="examples/reflexive-loop/main.gooo" and .ir_node_kind=="Activity" and .generated_artifact != null and .evaluator != null)' "$evidence/scenarios/normal/ci-artifact.json" >/dev/null
           cat "$evidence/scenarios/normal/ci-artifact.json" >> "$GITHUB_STEP_SUMMARY"
+          jq -e '
+            .schema=="gooo/reflexive-loop/integrated-conformance/v1" and
+            .tests=={executed:6,reused:0,skipped:0} and
+            .cross_project_required_gates==0 and
+            .precedence==["REFUTED","UNKNOWN","CLOSED"] and
+            ([.scenarios[].decision]|sort)==["CLOSED","FAIL_CLOSED","FAIL_CLOSED","FAIL_CLOSED","FAIL_CLOSED","FAIL_CLOSED"] and
+            .normal_external_unknown.state=="UNKNOWN" and .normal_external_unknown.preserved_exactly==true
+          ' "$evidence/integration/integrated-conformance.json" >/dev/null
+          jq -e '
+            .schema=="gooo/reflexive-loop/integrated-ci-artifact/v1" and
+            .scenario=="normal" and .decision=="CLOSED" and
+            .summary=={total:8,closed:8,unknown:0,refuted:0} and
+            .execution_plan.selected_operation=="reuse-verified-evidence" and
+            .execution_plan.deferred_operation=="defer-conformance-replay" and
+            .execution_plan.privilege_level=="read-only" and
+            .resolution_unknown=={metric:"performance/utility",state:"UNKNOWN",stage:"IMPROVEMENT",step:"REQUIRE_EXACT_BEFORE_AFTER_PAIR",reason:"EXACT_BEFORE_AFTER_PAIR_MISSING",unknown_class:"CAUSALITY_UNPROVEN",next_operation:"PROVIDE_EXACT_BEFORE_AFTER_PAIR",blocked_by:["exact-before-after-pair"],preserved_exactly:true} and
+            .lifecycle.promotion=="PROMOTED" and .lifecycle.rollback.repository_writes==0 and
+            .authority=={repository_writes:0,cross_project_required_gates:0,input_repository_unchanged:true,local_tests_run:0} and
+            .bindings.external_inputs_affect_proposal==true and .bindings.execution_plan_affects_apply==true and
+            .bindings.resolution_unknown_affects_utility_claim==true and .bindings.provenance_only==false and
+            (.metrics|length)==8 and all(.metrics[]; .denominator==1 and (.numerator|type)=="number")
+          ' "$evidence/integration/scenarios/normal/integration-artifact.json" >/dev/null
+          cat "$evidence/integration/scenarios/normal/integration-artifact.json" >> "$GITHUB_STEP_SUMMARY"
+          cat "$evidence/integration/integrated-conformance.json" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload loop evidence
         id: evidence
