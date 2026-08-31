@@ -383,7 +383,11 @@ elif [ "$scenario" = "normal-learning" ] || [ "$scenario" = "deterministic-repla
       mkdir -p "$output/disposable/before" "$output/disposable/after"
       before_graph_status=$(run_command "$output/disposable/before/graph.json" "$output/disposable/before/graph.stderr" "$gooo" graph dump "$tmp/clone-before/fixtures/learning-drift-gated/workload.gooo")
       after_graph_status=$(run_command "$output/disposable/after/graph.json" "$output/disposable/after/graph.stderr" "$gooo" graph dump "$tmp/clone-after/fixtures/learning-drift-gated/workload.gooo")
-      oracle_status=$(bash "$repository/scripts/learning-drift-oracle.sh" "$tmp/clone-before/fixtures/learning-drift-gated/workload.gooo" "$tmp/clone-after/fixtures/learning-drift-gated/workload.gooo" "$oracle_spec" > "$output/exact-oracle.json")
+      if bash "$repository/scripts/learning-drift-oracle.sh" "$tmp/clone-before/fixtures/learning-drift-gated/workload.gooo" "$tmp/clone-after/fixtures/learning-drift-gated/workload.gooo" "$oracle_spec" > "$output/exact-oracle.json"; then
+        oracle_status=0
+      else
+        oracle_status=$?
+      fi
       oracle_decision=$(jq -r '.decision' "$output/exact-oracle.json")
       before_oracle_failures=$(jq -r '.oracle_failures.before' "$output/exact-oracle.json")
       after_oracle_failures=$(jq -r '.oracle_failures.after' "$output/exact-oracle.json")
