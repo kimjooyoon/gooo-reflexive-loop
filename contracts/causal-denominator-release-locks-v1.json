@@ -10,17 +10,20 @@
       "release_immutable": true,
       "manifest": {
         "schema": "gooo/causal-ci/consumer-manifest/v1",
+        "asset_id": 537211731,
         "asset_name": "consumer-manifest-v0.1.0.json",
         "size_bytes": 3535,
         "sha256": "sha256:0bcbec393e13272965d41756888afcb608b03884ca4544e0e617a57b9e194818"
       },
       "evidence": {
         "asset_name": "gooo-causal-ci-evidence-v0.1.0.tar.gz",
+        "asset_id": 537211732,
         "size_bytes": 4910,
         "sha256": "sha256:edb4148322da926b181468a98b4fd717499ba6f04763d934ebed3d59eebce29b"
       },
       "checksum": {
         "asset_name": "SHA256SUMS-v0.1.0.txt",
+        "asset_id": 537211733,
         "size_bytes": 200,
         "sha256": "sha256:7e272afe915165314212337faa1543848a5b5643590cd2637aa755b420500a01"
       },
@@ -51,17 +54,20 @@
       "release_immutable": true,
       "manifest": {
         "schema": "gooo/denominator/consumer-manifest/v1",
+        "asset_id": 537215531,
         "asset_name": "gooo-denominator-protocol-v0.1.0-consumer-manifest.json",
         "size_bytes": 1655,
         "sha256": "sha256:7bd4c814ddac9c964867931c206c98f0702488833d6791d26bac229535882bda"
       },
       "evidence": {
         "asset_name": "gooo-denominator-protocol-v0.1.0-evidence.tar.gz",
+        "asset_id": 537215532,
         "size_bytes": 10825,
         "sha256": "sha256:0933dfeec57a785ec29271bca51cd129cbdd50bc202ed5a5b40d65753e85bcbd"
       },
       "checksum": {
         "asset_name": "gooo-denominator-protocol-v0.1.0-checksums-sha256.txt",
+        "asset_id": 537215530,
         "size_bytes": 237,
         "sha256": "sha256:45524b45784205bb39b8d188e235d9dd02029dbd2d939e11ae88b1e2e21b15a6"
       },
