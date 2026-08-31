@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
-set -x
 
 if [ "$#" -ne 9 ]; then
   echo "usage: modern-cycle-loop.sh GOOO PROPOSER FRONTIER CHANGE_BUNDLE TEST_FRONTIER REPOSITORY UPSTREAM OUTPUT SCENARIO" >&2
@@ -453,6 +452,7 @@ if [ "$decision" != "REFUTED" ] && [ "$scenario" != "fixed-point-no-candidate" ]
     '{schema:"gooo/reflexive-loop/modern-cycle/exact-oracle-pair/v1",scenario:$scenario,exact_identity:{source_digest:$source,toolchain_digest:$tool,contract_digest:$contract,harness_digest:$harness},workload_pair:{before_digest:$before_workload,after_digest:$after_workload},before:$before[0],after:$after[0],semantic_digest_pair:{before:$before_semantic,after:$after_semantic},oracle:$oracle[0],rollback:{mode:"OUTPUT_ONLY",repository_writes:0,target:"temporary_output"}}' > "$output/exact-oracle-pair.json"
   if [ "$oracle_decision" = "CLOSED" ] && [ "$before_failures" -eq 1 ] && [ "$after_failures" -eq 0 ] && \
      [ "$(jq -r '.status' "$output/disposable/before/measurement.json")" -eq 0 ] && [ "$(jq -r '.status' "$output/disposable/after/measurement.json")" -eq 0 ]; then
+    unknown_id=""
     frontier_state="${frontier_state:-UNKNOWN}"
     if [ "$frontier_state" = "CLOSED" ]; then semantic_state="CLOSED"; fi
     if [ "$scenario" = "missing-utility" ]; then
