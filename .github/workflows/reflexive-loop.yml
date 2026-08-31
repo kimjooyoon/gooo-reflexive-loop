@@ -112,6 +112,46 @@ jobs:
           fetch_release_asset "$external/lattice-release.json" "$lattice_repo" "$lattice_manifest_name" "$lattice_manifest_digest" "$lattice_manifest_size" "$external/lattice-manifest.json"
           fetch_release_asset "$external/lattice-release.json" "$lattice_repo" "$lattice_evidence_name" "$lattice_evidence_digest" "$lattice_evidence_size" "$external/lattice-evidence.zip"
 
+          causal_repo=$(jq -r '.releases.causal_ci.repository' "$lock")
+          causal_tag=$(jq -r '.releases.causal_ci.tag' "$lock")
+          causal_target=$(jq -r '.releases.causal_ci.target_commit_sha' "$lock")
+          causal_manifest_name=$(jq -r '.releases.causal_ci.manifest.asset_name' "$lock")
+          causal_manifest_size=$(jq -r '.releases.causal_ci.manifest.size_bytes' "$lock")
+          causal_manifest_digest=$(jq -r '.releases.causal_ci.manifest.sha256' "$lock")
+          causal_evidence_name=$(jq -r '.releases.causal_ci.evidence.asset_name' "$lock")
+          causal_evidence_digest=$(jq -r '.releases.causal_ci.evidence.sha256' "$lock")
+          causal_evidence_size=$(jq -r '.releases.causal_ci.evidence.size_bytes' "$lock")
+          causal_checksum_name=$(jq -r '.releases.causal_ci.checksum.asset_name' "$lock")
+          causal_checksum_digest=$(jq -r '.releases.causal_ci.checksum.sha256' "$lock")
+          causal_checksum_size=$(jq -r '.releases.causal_ci.checksum.size_bytes' "$lock")
+          gh api "repos/$causal_repo/git/ref/tags/$causal_tag" > "$external/causal-tag-ref.json"
+          jq -e --arg target "$causal_target" '.object.type=="commit" and .object.sha==$target' "$external/causal-tag-ref.json" >/dev/null
+          gh api "repos/$causal_repo/releases/tags/$causal_tag" > "$external/causal-release.json"
+          jq -e --arg tag "$causal_tag" '.immutable==true and .tag_name==$tag' "$external/causal-release.json" >/dev/null
+          fetch_release_asset "$external/causal-release.json" "$causal_repo" "$causal_manifest_name" "$causal_manifest_digest" "$causal_manifest_size" "$external/causal-manifest.json"
+          fetch_release_asset "$external/causal-release.json" "$causal_repo" "$causal_evidence_name" "$causal_evidence_digest" "$causal_evidence_size" "$external/causal-evidence.tar.gz"
+          fetch_release_asset "$external/causal-release.json" "$causal_repo" "$causal_checksum_name" "$causal_checksum_digest" "$causal_checksum_size" "$external/causal-checksum.txt"
+
+          denominator_repo=$(jq -r '.releases.denominator_protocol.repository' "$lock")
+          denominator_tag=$(jq -r '.releases.denominator_protocol.tag' "$lock")
+          denominator_target=$(jq -r '.releases.denominator_protocol.target_commit_sha' "$lock")
+          denominator_manifest_name=$(jq -r '.releases.denominator_protocol.manifest.asset_name' "$lock")
+          denominator_manifest_size=$(jq -r '.releases.denominator_protocol.manifest.size_bytes' "$lock")
+          denominator_manifest_digest=$(jq -r '.releases.denominator_protocol.manifest.sha256' "$lock")
+          denominator_evidence_name=$(jq -r '.releases.denominator_protocol.evidence.asset_name' "$lock")
+          denominator_evidence_digest=$(jq -r '.releases.denominator_protocol.evidence.sha256' "$lock")
+          denominator_evidence_size=$(jq -r '.releases.denominator_protocol.evidence.size_bytes' "$lock")
+          denominator_checksum_name=$(jq -r '.releases.denominator_protocol.checksum.asset_name' "$lock")
+          denominator_checksum_digest=$(jq -r '.releases.denominator_protocol.checksum.sha256' "$lock")
+          denominator_checksum_size=$(jq -r '.releases.denominator_protocol.checksum.size_bytes' "$lock")
+          gh api "repos/$denominator_repo/git/ref/tags/$denominator_tag" > "$external/denominator-tag-ref.json"
+          jq -e --arg target "$denominator_target" '.object.type=="commit" and .object.sha==$target' "$external/denominator-tag-ref.json" >/dev/null
+          gh api "repos/$denominator_repo/releases/tags/$denominator_tag" > "$external/denominator-release.json"
+          jq -e --arg tag "$denominator_tag" --arg target "$denominator_target" '.immutable==true and .tag_name==$tag and .target_commitish==$target' "$external/denominator-release.json" >/dev/null
+          fetch_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_manifest_name" "$denominator_manifest_digest" "$denominator_manifest_size" "$external/denominator-manifest.json"
+          fetch_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_evidence_name" "$denominator_evidence_digest" "$denominator_evidence_size" "$external/denominator-evidence.tar.gz"
+          fetch_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_checksum_name" "$denominator_checksum_digest" "$denominator_checksum_size" "$external/denominator-checksum.txt"
+
       - name: Run all loop scenarios
         shell: bash
         run: |
@@ -150,6 +190,16 @@ jobs:
             "$evidence/scenarios/normal/ci-artifact.json" > "$RUNNER_TEMP/normal-ci-artifact.json"
           mv "$RUNNER_TEMP/normal-ci-artifact.json" "$evidence/scenarios/normal/ci-artifact.json"
           bash scripts/integration-conform.sh "$GOOO_BIN" "$GITHUB_WORKSPACE" "$RUNNER_TEMP/gooo-reflexive-loop-external-inputs" "$evidence/integration"
+          start_ns=$(date +%s%N)
+          /usr/bin/time -f '%e\t%M' -o "$RUNNER_TEMP/causal-denominator-conformance-time.tsv" \
+            bash scripts/causal-denominator-conform.sh "$GOOO_BIN" "$GITHUB_WORKSPACE" "$RUNNER_TEMP/gooo-reflexive-loop-external-inputs" "$evidence/causal-denominator"
+          end_ns=$(date +%s%N)
+          wall_ms=$(( (end_ns - start_ns) / 1000000 ))
+          read -r seconds rss < "$RUNNER_TEMP/causal-denominator-conformance-time.tsv"
+          jq -S --argjson wall_ms "$wall_ms" --argjson rss "${rss:-0}" \
+            '.performance={conformance_wall_ms:$wall_ms,conformance_peak_rss_kib:$rss}' \
+            "$evidence/causal-denominator/causal-denominator-conformance.json" > "$RUNNER_TEMP/causal-denominator-conformance.json"
+          mv "$RUNNER_TEMP/causal-denominator-conformance.json" "$evidence/causal-denominator/causal-denominator-conformance.json"
 
       - name: Check human-readable evidence
         shell: bash
@@ -196,6 +246,31 @@ jobs:
           ' "$evidence/integration/scenarios/normal/integration-artifact.json" >/dev/null
           cat "$evidence/integration/scenarios/normal/integration-artifact.json" >> "$GITHUB_STEP_SUMMARY"
           cat "$evidence/integration/integrated-conformance.json" >> "$GITHUB_STEP_SUMMARY"
+          jq -e '
+            .schema=="gooo/reflexive-loop/causal-denominator-conformance/v1" and
+            .tests=={scenarios:10,normal_selected:{executed:2,reused:1,skipped:1}} and
+            .external_required_status_gates==0 and
+            .precedence==["REFUTED","UNKNOWN","CLOSED"] and
+            ([.scenarios[].decision]|sort)==["CLOSED","REFUTED","REFUTED","REFUTED","REFUTED","REFUTED","REFUTED","REFUTED","REFUTED","UNKNOWN"] and
+            .normal_performance_utility=={state:"UNKNOWN",stage:"IMPROVEMENT",step:"REQUIRE_EXACT_BEFORE_AFTER_PAIR",reason:"EXACT_BEFORE_AFTER_PAIR_MISSING",unknown_class:"CAUSALITY_UNPROVEN",next_operation:"PROVIDE_EXACT_BEFORE_AFTER_PAIR",blocked_by:["exact-before-after-pair"],preserved_exactly:true} and
+            .performance.conformance_wall_ms>=0 and .performance.conformance_peak_rss_kib>=0
+          ' "$evidence/causal-denominator/causal-denominator-conformance.json" >/dev/null
+          jq -e '
+            .schema=="gooo/reflexive-loop/causal-denominator-ci-artifact/v1" and
+            .scenario=="normal" and .decision=="CLOSED" and
+            .summary=={total:10,closed:10,unknown:0,refuted:0} and
+            .causal_selection.counts=={execute:2,reuse:1,skip:1} and
+            .verification_plan=={mode:"causal-selected-execute-reuse-skip",execute_tests:["test-add","test-integration"],reuse_tests:["test-normalize"],skip_tests:["test-subtract"],proof_contract_version:2,denominator:7} and
+            .selected_verification=={execute:2,reuse:1,skip:1,plan_affects_apply:true} and
+            .denominator_binding=={v1:6,v2:7,proof_denominator:7,affected_denominator_preserved:true,migration:{added:1,split:1,retired:1}} and
+            .lifecycle.promotion=="PROMOTED" and .lifecycle.rollback.repository_writes==0 and
+            .authority=={repository_writes:0,external_required_status_gates:0,input_repository_unchanged:true,local_tests_run:0} and
+            .bindings.causal_input_affects_proposal==true and .bindings.causal_input_affects_verification_plan==true and
+            .bindings.denominator_input_affects_proof_plan==true and .bindings.provenance_only==false and
+            (.metrics|length)==10 and all(.metrics[]; .denominator==1 and (.numerator|type)=="number" and .activity != null and .source_file=="examples/reflexive-loop/main.gooo" and .ir_node_kind=="Activity" and .generated_artifact != null and .evaluator != null)
+          ' "$evidence/causal-denominator/scenarios/normal/causal-denominator-artifact.json" >/dev/null
+          cat "$evidence/causal-denominator/scenarios/normal/causal-denominator-artifact.json" >> "$GITHUB_STEP_SUMMARY"
+          cat "$evidence/causal-denominator/causal-denominator-conformance.json" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload loop evidence
         id: evidence
