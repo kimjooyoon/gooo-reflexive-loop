@@ -108,7 +108,7 @@ jq -e '
   .metrics.tests_skipped==1 and .metrics.tests_not_observed==0 and
   .oracle.decision=="CLOSED" and .semantic_close.state=="CLOSED" and
   .external_utility.state=="UNKNOWN" and .promotion.state=="PROMOTED_OUTPUT_ONLY" and
-  .authority.repository_writes==0
+  .promotion.authority.repository_writes==0
 ' "$artifact_dir/scenarios/normal-candidate/report.json" >/dev/null
 jq -e '
   .decision=="UNKNOWN" and .metrics.before_oracle_failures==1 and .metrics.after_oracle_failures==0 and

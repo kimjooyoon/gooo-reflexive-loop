@@ -54,7 +54,7 @@ digest_file() {
 }
 
 json_digest() {
-  jq -S -c "$2" "$1" | sha256sum | awk '{print "sha256:" $1}'
+  jq -S -c -j "$2" "$1" | sha256sum | awk '{print "sha256:" $1}'
 }
 
 copy_tree() {
