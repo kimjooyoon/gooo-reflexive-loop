@@ -412,7 +412,7 @@ jobs:
           tar -xzf "$experience_evidence_archive" -C "$upstream/experience/evidence"
           experience_source_root=$(find "$upstream/experience/source" -mindepth 1 -maxdepth 1 -type d -name '*experience-memory*' -print -quit)
           test -n "$experience_source_root"
-          test "$(awk 'NF{print $1; exit}' "$experience_checksum")" = "$(jq -r '.releases.experience_memory.assets[]|select(.role=="source")|.digest' "$lock" | sed 's/^sha256://')"
+          test "$(awk 'NF{print $1; exit}' "$experience_checksum")" = "$(jq -r '.releases.experience_memory.assets[]|select(.role=="source")|.digest' "$lock")"
 
           drift_evidence_archive="$upstream/drift/assets/$(jq -r '.releases.semantic_drift_guard.assets[]|select(.role=="evidence")|.name' "$lock")"
           drift_checksum="$upstream/drift/assets/$(jq -r '.releases.semantic_drift_guard.assets[]|select(.role=="checksum")|.name' "$lock")"
