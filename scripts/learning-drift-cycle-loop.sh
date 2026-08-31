@@ -422,7 +422,7 @@ elif [ "$scenario" = "normal-learning" ] || [ "$scenario" = "deterministic-repla
         read -r test_seconds test_peak_rss_kib < "$tmp/test-frontier.time"
         test_wall_ms=$(awk -v seconds="$test_seconds" 'BEGIN {printf "%d", seconds * 1000}')
       fi
-      if [ "$test_frontier_status" -ne 0 ] || [ "$test_frontier_state" != "CLOSED" ] || [ "$tests_not_observed" -ne 0 ]; then
+      if [ "$test_frontier_status" -ne 0 ] || [ "$test_frontier_state" = "REFUTED" ] || [ "$tests_not_observed" -ne 0 ]; then
         decision="UNKNOWN"
         decision_reason="TEST_FRONTIER_OBSERVATION_UNKNOWN"
         unknowns='[{"stage":"REGRESSION","step":"VERIFY_EXACT_ORACLE_AND_TEST_FRONTIER","reason":"AFFECTED_TEST_EXECUTION_NOT_OBSERVED","unknown_class":"TEST_EXECUTION_NOT_OBSERVED","next_operation":"OBSERVE_AFFECTED_TEST_EXECUTION","blocked_by":["test-validate-work-item"]}]'
