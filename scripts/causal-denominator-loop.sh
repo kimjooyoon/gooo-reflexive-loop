@@ -237,7 +237,7 @@ else
     .claim=={state:"CLOSED",stage:"CAUSAL_SELECTION",step:"generate-activities",reason:"CAUSAL_TEST_ACTIVITY_SET_GENERATED",unknown_class:"",next_operation:"NONE",blocked_by:[]} and
     .metrics=={denominator:12,closed:12,unknown:0,refuted:0,executed:2,reused:1,skipped:1} and
     (.activities|length)==12 and
-    ([.activities[].cell_id]|sort)==["CAUSAL_CLOSURE","CHANGED_CLAIM","CLAIM_BINDING","EXECUTION_ENVELOPE","EXACT_PAIR","EXCLUDED_EVIDENCE","REFUTED_EXCLUSION","REPLAY","SELECTED_ACTIVITIES","SEMANTIC_GRAPH","SOURCE_BINDING","UNKNOWN_FRONTIER"] and
+    ([.activities[].cell_id]|sort)==["CAUSAL_CLOSURE","CHANGED_CLAIM","CLAIM_BINDING","EXACT_PAIR","EXCLUDED_EVIDENCE","EXECUTION_ENVELOPE","REFUTED_EXCLUSION","REPLAY","SELECTED_ACTIVITIES","SEMANTIC_GRAPH","SOURCE_BINDING","UNKNOWN_FRONTIER"] and
     all(.activities[]; .state=="CLOSED" and .source_path=="examples/causal-ci-policy/main.gooo" and .artifact_path=="activity-plan.json" and .evaluator=="github.com/kimjooyoon/gooo-causal-ci/internal/causalci" and (.binding_digest|test("^sha256:[0-9a-f]{64}$")) and (.graph_node_id|startswith("causalci://activity/"))) and
     ([.activities[].proof_choice]|sort)==["COHERENCE","COHERENCE","COHERENCE","COHERENCE","FOUNDATION","FOUNDATION","FOUNDATION","FOUNDATION","REGRESSION","REGRESSION","REGRESSION","REGRESSION"] and
     ([.activities[].indicator_class]|sort)==["DRIVER","DRIVER","DRIVER","DRIVER","GUARDRAIL","GUARDRAIL","GUARDRAIL","GUARDRAIL","OUTCOME","OUTCOME","OUTCOME","OUTCOME"] and
