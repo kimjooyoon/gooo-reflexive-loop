@@ -55,6 +55,33 @@ promote/rollback boundary, and exercises tampered digest, stale target,
 missing-UNKNOWN-field, release replay, and authority-escalation cases as
 `REFUTED`.
 
+## v0.3 modern self-improvement cycle
+
+The v0.3 cycle is a separate, fixed 12-cell denominator in
+[`contracts/modern-cycle-denominator-v1.json`](contracts/modern-cycle-denominator-v1.json).
+It is balanced four-by-four across `FOUNDATION`, `COHERENCE`, and
+`REGRESSION`, and independently four-by-four across `DRIVER`, `OUTCOME`, and
+`GUARDRAIL`. It does not combine evidence into an aggregate score or
+percentage. Its precedence remains `REFUTED > UNKNOWN > CLOSED`, and every
+UNKNOWN keeps exactly `stage`, `step`, `reason`, `unknown_class`,
+`next_operation`, and `blocked_by`.
+
+The Actions-only modern cycle consumes the exact immutable releases pinned in
+[`contracts/modern-cycle-upstream-release-lock-v1.json`](contracts/modern-cycle-upstream-release-lock-v1.json):
+`gooo-improvement-proposer@v0.1.1`, `gooo-improvement-frontier@v0.1.0`,
+`gooo-change-bundle@v0.1.1`, and `gooo-test-frontier@v0.1.1`. It proposes a
+candidate from the ledger, computes a causal frontier, materializes a
+deterministic patch and rollback bundle, applies the patch only to a
+caller-owned disposable clone, classifies exact test statuses, and compares
+the same small Gooo workload before and after with the independent oracle in
+[`scripts/modern-oracle.sh`](scripts/modern-oracle.sh). Semantic close and
+external utility evidence stay separate: without an exact utility pair the
+utility claim remains `UNKNOWN` and is never inferred from runtime numbers.
+
+The modern conformance corpus has three normal, three UNKNOWN, and four
+REFUTED scenarios. All repository writes, local test executions, pull-request
+authority, merge authority, and required cross-project gates remain zero.
+
 ## Running in CI
 
 The checked-in workflow downloads the pinned Gooo release, performs all

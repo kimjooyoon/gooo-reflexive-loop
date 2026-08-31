@@ -1,0 +1,62 @@
+{
+  "schema": "gooo/reflexive-loop/modern-cycle-upstream-release-lock/v1",
+  "consumption": "exact_immutable_release_assets_in_caller_owned_temp",
+  "release_immutability_authority": "github_api",
+  "cross_project_required_gates": 0,
+  "releases": {
+    "proposer": {
+      "repository": "kimjooyoon/gooo-improvement-proposer",
+      "tag": "v0.1.1",
+      "release_id": 379780599,
+      "tag_object_sha": "2ed70c6fae93c21b0c4839d4fa2ff0f4da3ebc59",
+      "target_commit_sha": "6757651d5b6abae7dfb7c7a3ec7a0cab103e3279",
+      "immutable": true,
+      "assets": [
+        {"id": 538032342, "name": "gooo-improvement-proposer-v0.1.1.tar.gz", "size": 25402, "digest": "sha256:55e1d35d67b6c18aedcd26de7e699dc6096c58fc59ad4f624f1bd439f9b433a5"},
+        {"id": 538032347, "name": "gooo-improvement-proposer-v0.1.1-evidence.tar.gz", "size": 11861, "digest": "sha256:ceccc9f5a3a44ff3ef27d9a78cc9569192f6b5f119a1cc338dc5cae49b8e9e53"},
+        {"id": 538032346, "name": "release-manifest.json", "size": 679, "digest": "sha256:a55b06f0658afe4b4b7d875ff6ea00689aeabe4ccf236aa1c0f4be415160f3eb"},
+        {"id": 538032343, "name": "SHA256SUMS", "size": 309, "digest": "sha256:822341ef6ab41c6c8e4f10fc4f93db3b29bf3ad4d1c9abe208a249ea24945c34"}
+      ]
+    },
+    "frontier": {
+      "repository": "kimjooyoon/gooo-improvement-frontier",
+      "tag": "v0.1.0",
+      "release_id": 379728340,
+      "tag_object_sha": "72e59658ff08c47c7e7accd8b3af470a87da428d",
+      "target_commit_sha": "5749a883b85cc4ede1e53d124f1e3685b23189bd",
+      "immutable": true,
+      "assets": [
+        {"id": 537940232, "name": "gooo-improvement-frontier-v0.1.0.tar.gz", "size": 25799, "digest": "sha256:66ac3b7d659c470544b8bd24d9c79ee50d2d250b2f6162cb5fb79b05a9000388"},
+        {"id": 537940229, "name": "ci-runtime-receipt-v0.1.0.json", "size": 1024, "digest": "sha256:562db1b6f224a3b732f9b8bb57f1efdcf33d6653e239ffb021fe3e7d9cf2baf4"}
+      ]
+    },
+    "change_bundle": {
+      "repository": "kimjooyoon/gooo-change-bundle",
+      "tag": "v0.1.1",
+      "release_id": 379788730,
+      "tag_object_sha": "09885ac7480d1ee2e350e907f5dc408b35188f47",
+      "target_commit_sha": "a93c41a28b5718f110b8679556b169f2b11c75b5",
+      "immutable": true,
+      "assets": [
+        {"id": 538044876, "name": "gooo-change-bundle-v0.1.1.tar.gz", "size": 30148, "digest": "sha256:60f6fbedb897467bbf499097a2abebe56e047c9f1da920000daa34f2f675fb5b"},
+        {"id": 538044878, "name": "gooo-change-bundle-ci-v0.1.1.tar.gz", "size": 6267, "digest": "sha256:42dd203bd20438db7cc15abbbfe6fa19542cc2bf0de26cbe6db056150e1bb2f6"},
+        {"id": 538044874, "name": "ci-metrics.json", "size": 641, "digest": "sha256:1fb8dcd44e0758555acefc75a4e9aabe83806cbe41d69f0e43d38cc5fadd0e03"},
+        {"id": 538044877, "name": "release-manifest.json", "size": 848, "digest": "sha256:1920afc524309326cba26109c93d764b4effb5dd4bf717340db654131ecbfc15"},
+        {"id": 538044875, "name": "SHA256SUMS", "size": 371, "digest": "sha256:82b7d8c1f177bc36806f5678d27f1db50114b49d279fb14c673ffdc5fe59a196"}
+      ]
+    },
+    "test_frontier": {
+      "repository": "kimjooyoon/gooo-test-frontier",
+      "tag": "v0.1.1",
+      "release_id": 379783807,
+      "tag_object_sha": "398577621c42eb7450416bdf086b9304c8c1e42a",
+      "target_commit_sha": "f8e1f8aebb67abbda237073893a4a855a8659df5",
+      "immutable": true,
+      "assets": [
+        {"id": 538036992, "name": "gooo-test-frontier-v0.1.1.tar.gz", "size": 30719, "digest": "sha256:1ef4c6a13288cb8198734e8fde252d470169b2b4f0d09006fdf467d5317917f8"},
+        {"id": 538036991, "name": "release-manifest.json", "size": 392, "digest": "sha256:fbeec8e847b185078fca004d22749de29c1363459cf1eb28fa74a0c601f3429b"},
+        {"id": 538036990, "name": "SHA256SUMS", "size": 106, "digest": "sha256:6bb2bddc43250a84a56c9dd0f039ea2bf06eb7b9777c6efc728610f5355bbf85"}
+      ]
+    }
+  }
+}

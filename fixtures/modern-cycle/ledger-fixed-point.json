@@ -1,0 +1,25 @@
+{
+  "schema": "gooo/improvement-proposer/protocol/v1/input/v1",
+  "case_id": "modern-cycle-fixed-point",
+  "ledger": {
+    "release": {
+      "repository": "kimjooyoon/gooo-self-improvement-ledger",
+      "tag": "v0.11.0",
+      "commit_sha": "e7e408f6631a6b54effa9a9da9bb33947b35cb09",
+      "asset": "gooo-self-improvement-ledger-v0.11.0-evidence.zip",
+      "asset_digest": "sha256:cd09cad33a0934f8bdadcec2be8a1ad2feded92d504bbca7a76bb85e611901b4",
+      "ledger_digest": "sha256:cd09cad33a0934f8bdadcec2be8a1ad2feded92d504bbca7a76bb85e611901b4",
+      "immutable": true
+    },
+    "expected_tag": "v0.11.0",
+    "expected_commit_sha": "e7e408f6631a6b54effa9a9da9bb33947b35cb09",
+    "expected_ledger_digest": "sha256:cd09cad33a0934f8bdadcec2be8a1ad2feded92d504bbca7a76bb85e611901b4"
+  },
+  "capabilities": [
+    {"record_id":"fixed-capability","capability_id":"modern-cycle.fixed-point","state":"CLOSED","source_cell":"modern-cell-02","evidence_digest":"sha256:5555555555555555555555555555555555555555555555555555555555555555","record_digest":"sha256:6666666666666666666666666666666666666666666666666666666666666666","reason":"CLOSED","blocked_by":[]}
+  ],
+  "counterexamples": [],
+  "utilities": [
+    {"record_id":"fixed-utility","capability_id":"modern-cycle.fixed-point","state":"CLOSED","source_cell":"modern-cell-10","evidence_digest":"sha256:7777777777777777777777777777777777777777777777777777777777777777","record_digest":"sha256:8888888888888888888888888888888888888888888888888888888888888888","before":{"memory_kib":10,"build_wall_ms":10,"test_wall_ms":10,"conformance_wall_ms":10},"after":{"memory_kib":10,"build_wall_ms":10,"test_wall_ms":10,"conformance_wall_ms":10}}
+  ]
+}

@@ -1,0 +1,7 @@
+package modernfixture
+namespace modernfixture
+
+entity WorkItem id "gooo://reflexive-loop/modern-cycle/work-item"
+entity WorkItemResult id "gooo://reflexive-loop/modern-cycle/work-item-result"
+
+activity ParseWorkItem(WorkItem) -> WorkItemResult

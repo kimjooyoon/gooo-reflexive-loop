@@ -1,0 +1,27 @@
+{
+  "schema": "gooo/improvement-frontier/protocol/v1/fixture/v1",
+  "case_id": "modern-cycle-frontier",
+  "description": "The bounded candidate and its exact execution order are scheduled from explicit causal edges.",
+  "graph": {
+    "schema": "gooo/improvement-frontier/protocol/v1/graph/v1",
+    "graph_id": "modern-cycle-frontier-graph",
+    "denominator_id": "improvement-frontier-v1",
+    "meta_activity_count": 12,
+    "nodes": [
+      {"claim_id":"claim-candidate","operation_id":"candidate","current":"CLOSED","stage":"PROPOSE","step":"candidate","proof_choice":"FOUNDATION","depends_on":[],"blocked_by":[],"mutation_authority":["candidate"],"resource_locks":["ledger"],"immutable_inputs":{"ledger":"sha256:1111111111111111111111111111111111111111111111111111111111111111"},"evidence_ids":[],"next_operation":"compute-frontier"},
+      {"claim_id":"claim-frontier","operation_id":"compute-frontier","current":"CLOSED","stage":"PLAN","step":"frontier","proof_choice":"COHERENCE","depends_on":["candidate"],"blocked_by":[],"mutation_authority":["frontier"],"resource_locks":["candidate"],"immutable_inputs":{"candidate":"sha256:2222222222222222222222222222222222222222222222222222222222222222"},"evidence_ids":[],"next_operation":"apply-bundle"},
+      {"claim_id":"claim-apply","operation_id":"apply-bundle","current":"CLOSED","stage":"APPLY","step":"disposable-clone","proof_choice":"REGRESSION","depends_on":["compute-frontier"],"blocked_by":[],"mutation_authority":["disposable-clone"],"resource_locks":["candidate"],"immutable_inputs":{"bundle":"sha256:3333333333333333333333333333333333333333333333333333333333333333"},"evidence_ids":[],"next_operation":"select-tests"}
+    ],
+    "evidence": [],
+    "denominator_migrations": []
+  },
+  "expected": {
+    "state": "CLOSED",
+    "parallel_batches": [["candidate"], ["compute-frontier"], ["apply-bundle"]],
+    "blocked_frontier_roots": [],
+    "refuted_frontier_roots": [],
+    "serial_cut_relations": [],
+    "valid_evidence_ids": [],
+    "invalid_evidence_ids": []
+  }
+}

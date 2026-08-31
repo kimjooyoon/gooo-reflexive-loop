@@ -1,0 +1,7 @@
+{
+  "schema": "gooo/reflexive-loop/modern-cycle/oracle-spec/v1",
+  "workload": "fixtures/modern-cycle/workload.gooo",
+  "required_activities": ["ParseWorkItem", "ValidateWorkItem"],
+  "baseline_failure": "MISSING_REQUIRED_ACTIVITY",
+  "candidate_success": "REQUIRED_ACTIVITIES_PRESENT"
+}
