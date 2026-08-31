@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+set -x
 
 if [ "$#" -ne 9 ]; then
   echo "usage: modern-cycle-loop.sh GOOO PROPOSER FRONTIER CHANGE_BUNDLE TEST_FRONTIER REPOSITORY UPSTREAM OUTPUT SCENARIO" >&2
