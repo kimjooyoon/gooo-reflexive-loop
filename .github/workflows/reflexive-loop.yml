@@ -360,6 +360,185 @@ jobs:
           ' "$evidence/scenarios/normal-candidate/report.json" >/dev/null
           jq -e '.decision=="UNKNOWN" and .unknowns[0].unknown_class=="TEST_EXECUTION_NOT_OBSERVED" and .metrics.tests_not_observed==1' "$evidence/scenarios/missing-utility/report.json" >/dev/null
           jq -e '.decision=="REFUTED" and (.refutations|index("FALSE_NEGATIVE_COUNTEREXAMPLE_PRESENT"))!=null' "$evidence/scenarios/false-negative-test-selection/report.json" >/dev/null
+
+      - name: Download and build exact v0.4 learning and drift upstream releases
+        shell: bash
+        run: |
+          set -euo pipefail
+          lock="$GITHUB_WORKSPACE/contracts/learning-drift-upstream-release-lock-v1.json"
+          upstream="$RUNNER_TEMP/gooo-learning-drift-upstream"
+          mkdir -p "$upstream/experience/assets" "$upstream/experience/source" "$upstream/experience/evidence" \
+            "$upstream/drift/assets" "$upstream/drift/source" "$upstream/drift/evidence" "$upstream/experience/bin" "$upstream/drift/bin"
+
+          fetch_release() {
+            local key=$1
+            local dir=$2
+            local repository tag release_id tag_object target
+            repository=$(jq -r --arg key "$key" '.releases[$key].repository' "$lock")
+            tag=$(jq -r --arg key "$key" '.releases[$key].tag' "$lock")
+            release_id=$(jq -r --arg key "$key" '.releases[$key].release_id' "$lock")
+            tag_object=$(jq -r --arg key "$key" '.releases[$key].tag_object_sha' "$lock")
+            target=$(jq -r --arg key "$key" '.releases[$key].target_commit_sha' "$lock")
+            gh api "repos/$repository/releases/tags/$tag" > "$dir/release.json"
+            jq -e --arg tag "$tag" --argjson release_id "$release_id" \
+              '.immutable==true and .id==$release_id and .tag_name==$tag and .target_commitish=="main"' "$dir/release.json" >/dev/null
+            gh api "repos/$repository/git/ref/tags/$tag" > "$dir/tag-ref.json"
+            jq -e --arg sha "$tag_object" '.object.type=="tag" and .object.sha==$sha' "$dir/tag-ref.json" >/dev/null
+            gh api "repos/$repository/git/tags/$tag_object" > "$dir/tag-object.json"
+            jq -e --arg target "$target" '.object.type=="commit" and .object.sha==$target' "$dir/tag-object.json" >/dev/null
+
+            while IFS= read -r asset; do
+              local asset_id asset_name asset_size asset_digest output
+              asset_id=$(jq -r '.id' <<<"$asset")
+              asset_name=$(jq -r '.name' <<<"$asset")
+              asset_size=$(jq -r '.size' <<<"$asset")
+              asset_digest=$(jq -r '.digest' <<<"$asset")
+              jq -e --arg name "$asset_name" --argjson id "$asset_id" --argjson size "$asset_size" --arg digest "$asset_digest" \
+                '[.assets[]|select(.id==$id and .name==$name and .size==$size and .digest==$digest)]|length==1' "$dir/release.json" >/dev/null
+              output="$dir/assets/$asset_name"
+              gh api -H 'Accept: application/octet-stream' "repos/$repository/releases/assets/$asset_id" > "$output"
+              printf '%s  %s\n' "${asset_digest#sha256:}" "$output" | sha256sum -c -
+              test "$(wc -c < "$output" | awk '{print $1 + 0}')" -eq "$asset_size"
+            done < <(jq -c --arg key "$key" '.releases[$key].assets[]' "$lock")
+          }
+
+          fetch_release experience_memory "$upstream/experience"
+          fetch_release semantic_drift_guard "$upstream/drift"
+
+          experience_source_archive="$upstream/experience/assets/$(jq -r '.releases.experience_memory.assets[]|select(.role=="source")|.name' "$lock")"
+          experience_evidence_archive="$upstream/experience/assets/$(jq -r '.releases.experience_memory.assets[]|select(.role=="evidence")|.name' "$lock")"
+          experience_checksum="$upstream/experience/assets/$(jq -r '.releases.experience_memory.assets[]|select(.role=="checksum")|.name' "$lock")"
+          tar -xzf "$experience_source_archive" -C "$upstream/experience/source"
+          tar -xzf "$experience_evidence_archive" -C "$upstream/experience/evidence"
+          experience_source_root=$(find "$upstream/experience/source" -mindepth 1 -maxdepth 1 -type d -name '*experience-memory*' -print -quit)
+          test -n "$experience_source_root"
+          test "$(awk 'NF{print $1; exit}' "$experience_checksum")" = "$(jq -r '.releases.experience_memory.assets[]|select(.role=="source")|.digest' "$lock")"
+
+          drift_evidence_archive="$upstream/drift/assets/$(jq -r '.releases.semantic_drift_guard.assets[]|select(.role=="evidence")|.name' "$lock")"
+          drift_checksum="$upstream/drift/assets/$(jq -r '.releases.semantic_drift_guard.assets[]|select(.role=="checksum")|.name' "$lock")"
+          tar -xzf "$drift_evidence_archive" -C "$upstream/drift/evidence"
+          drift_repository=$(jq -r '.releases.semantic_drift_guard.repository' "$lock")
+          drift_target=$(jq -r '.releases.semantic_drift_guard.target_commit_sha' "$lock")
+          gh api -H 'Accept: application/vnd.github+json' "repos/$drift_repository/tarball/$drift_target" > "$upstream/drift/source.tar.gz"
+          printf 'sha256:%s\n' "$(sha256sum "$upstream/drift/source.tar.gz" | awk '{print $1}')" > "$upstream/drift/source.tar.gz.sha256"
+          test "$(awk 'NF{print $1; exit}' "$drift_checksum")" = "$(jq -r '.releases.semantic_drift_guard.assets[]|select(.role=="evidence")|.digest' "$lock" | sed 's/^sha256://')"
+          tar -xzf "$upstream/drift/source.tar.gz" -C "$upstream/drift/source"
+          drift_source_root=$(find "$upstream/drift/source" -mindepth 1 -maxdepth 1 -type d -name '*semantic-drift-guard*' -print -quit)
+          test -n "$drift_source_root"
+
+          build_component() {
+            local key=$1
+            local source_root=$2
+            local package=$3
+            local binary=$4
+            local dir
+            case "$key" in
+              experience_memory) dir="$upstream/experience" ;;
+              semantic_drift_guard) dir="$upstream/drift" ;;
+              *) echo "unknown learning/drift build key: $key" >&2; return 1 ;;
+            esac
+            /usr/bin/time -f '%e\t%M' -o "$dir/build-time.tsv" \
+              bash -c "cd '$source_root' && go build -o '$dir/bin/$binary' '$package'"
+            jq -S -n --argjson wall_ms "$(awk '{printf "%d", $1 * 1000}' "$dir/build-time.tsv")" \
+              --argjson peak_rss_kib "$(awk '{print $2 + 0}' "$dir/build-time.tsv")" \
+              '{wall_ms:$wall_ms,peak_rss_kib:$peak_rss_kib}' > "$dir/build-metric.json"
+          }
+
+          build_component experience_memory "$experience_source_root" ./cmd/gooo-experience-memory experience-memory
+          build_component semantic_drift_guard "$drift_source_root" ./cmd/gooo-semantic-drift-guard semantic-drift-guard
+          build_wall_ms=$(jq -s 'map(.wall_ms)|add' "$upstream"/*/build-metric.json)
+          build_peak_rss_kib=$(jq -s 'map(.peak_rss_kib)|max' "$upstream"/*/build-metric.json)
+          jq -S -n --argjson build_wall_ms "$build_wall_ms" --argjson build_peak_rss_kib "$build_peak_rss_kib" \
+            '{build_wall_ms:$build_wall_ms,build_peak_rss_kib:$build_peak_rss_kib}' > "$upstream/build-metrics.json"
+          {
+            echo "LEARNING_UPSTREAM_ROOT=$upstream"
+            echo "LEARNING_EXPERIENCE_BIN=$upstream/experience/bin/experience-memory"
+            echo "LEARNING_DRIFT_BIN=$upstream/drift/bin/semantic-drift-guard"
+          } >> "$GITHUB_ENV"
+
+      - name: Run v0.4 learning and drift gated cycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/gooo-reflexive-loop-evidence/learning-drift-gated"
+          mkdir -p "$evidence"
+          start_ns=$(date +%s%N)
+          /usr/bin/time -f '%e\t%M' -o "$RUNNER_TEMP/learning-drift-cycle-time.tsv" \
+            bash scripts/learning-drift-cycle-conform.sh "$GOOO_BIN" "$LEARNING_EXPERIENCE_BIN" "$LEARNING_DRIFT_BIN" \
+              "$MODERN_FRONTIER_BIN" "$MODERN_CHANGE_BUNDLE_BIN" "$MODERN_TEST_FRONTIER_BIN" "$GITHUB_WORKSPACE" \
+              "$MODERN_UPSTREAM_ROOT" "$LEARNING_UPSTREAM_ROOT" "$evidence"
+          end_ns=$(date +%s%N)
+          wall_ms=$(( (end_ns - start_ns) / 1000000 ))
+          read -r seconds rss < "$RUNNER_TEMP/learning-drift-cycle-time.tsv"
+          build_wall_ms=$(jq -r '.build_wall_ms // 0' "$LEARNING_UPSTREAM_ROOT/build-metrics.json")
+          build_peak_rss_kib=$(jq -r '.build_peak_rss_kib // 0' "$LEARNING_UPSTREAM_ROOT/build-metrics.json")
+          jq -S --argjson build_wall_ms "$build_wall_ms" --argjson build_peak_rss_kib "$build_peak_rss_kib" \
+            --argjson conformance_wall_ms "$wall_ms" --argjson conformance_peak_rss_kib "${rss:-0}" \
+            'input as $build | .performance={build_wall_ms:$build_wall_ms,build_peak_rss_kib:$build_peak_rss_kib,conformance_wall_ms:$conformance_wall_ms,conformance_peak_rss_kib:$conformance_peak_rss_kib}' \
+            "$evidence/learning-drift-conformance.json" "$LEARNING_UPSTREAM_ROOT/build-metrics.json" > "$RUNNER_TEMP/learning-drift-conformance.json"
+          mv "$RUNNER_TEMP/learning-drift-conformance.json" "$evidence/learning-drift-conformance.json"
+          for report in "$evidence"/scenarios/*/report.json; do
+            jq -S --argjson build_wall_ms "$build_wall_ms" --argjson build_peak_rss_kib "$build_peak_rss_kib" \
+              --argjson conformance_wall_ms "$wall_ms" --argjson conformance_peak_rss_kib "${rss:-0}" \
+              '.metrics.build_wall_ms=$build_wall_ms | .metrics.build_peak_rss_kib=$build_peak_rss_kib | .metrics.conformance_wall_ms=$conformance_wall_ms | .metrics.conformance_peak_rss_kib=$conformance_peak_rss_kib | .performance={build_wall_ms:$build_wall_ms,build_peak_rss_kib:$build_peak_rss_kib,conformance_wall_ms:$conformance_wall_ms,conformance_peak_rss_kib:$conformance_peak_rss_kib}' \
+              "$report" > "$RUNNER_TEMP/learning-drift-report.json"
+            mv "$RUNNER_TEMP/learning-drift-report.json" "$report"
+            artifact="${report%/report.json}/ci-artifact.json"
+            digest=$(sha256sum "$report" | awk '{print "sha256:" $1}')
+            jq -S --arg digest "$digest" --argjson build_wall_ms "$build_wall_ms" --argjson build_peak_rss_kib "$build_peak_rss_kib" \
+              --argjson conformance_wall_ms "$wall_ms" --argjson conformance_peak_rss_kib "${rss:-0}" \
+              '.report_digest=$digest | .metrics.build_wall_ms=$build_wall_ms | .metrics.build_peak_rss_kib=$build_peak_rss_kib | .metrics.conformance_wall_ms=$conformance_wall_ms | .metrics.conformance_peak_rss_kib=$conformance_peak_rss_kib' \
+              "$artifact" > "$RUNNER_TEMP/learning-drift-artifact.json"
+            mv "$RUNNER_TEMP/learning-drift-artifact.json" "$artifact"
+          done
+          cat "$evidence/learning-drift-conformance.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check v0.4 learning and drift gated evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/gooo-reflexive-loop-evidence/learning-drift-gated"
+          jq -e '
+            .schema=="gooo/reflexive-loop/learning-drift-gated/conformance/v1" and
+            .version=="v0.4.0" and .scenario_counts=={normal:3,unknown:4,refuted:5} and
+            .precedence==["REFUTED","UNKNOWN","CLOSED"] and
+            .denominator.id=="learning-drift-gated-v1" and .denominator.target_cells==12 and
+            .denominator.fixed==true and .denominator.proof_totals=={FOUNDATION:4,COHERENCE:4,REGRESSION:4} and
+            .denominator.indicator_totals=={DRIVER:4,OUTCOME:4,GUARDRAIL:4} and
+            .authority.repository_writes==0 and .authority.local_test_executions==0 and
+            .authority.cross_project_required_gates==0 and .performance.build_wall_ms>=0 and
+            .performance.build_peak_rss_kib>=0 and .performance.conformance_wall_ms>=0 and
+            .performance.conformance_peak_rss_kib>=0
+          ' "$evidence/learning-drift-conformance.json" >/dev/null
+          jq -e '
+            .decision=="CLOSED" and .cycles.count==2 and
+            .cycles.cycle_a.selected_candidate=="candidate-known-refuted" and
+            .cycles.cycle_b.selected_candidate=="candidate-safe" and
+            .cycles.exact_recurrence=={before:1,after:0} and
+            .candidate_selection.attempts_observed==2 and .candidate_selection.candidate_count==5 and
+            .candidate_selection.avoided_refuted_candidates==1 and .candidate_selection.refuted_candidates==1 and
+            .candidate_selection.unknown_candidates==2 and .semantic_drift_guard.state=="CLOSED" and
+            .semantic_drift_guard.release_evidence_verified==true and
+            .semantic_drift_guard.mutable_prior_release_used_as_input==false and
+            .oracle.before_failures==1 and .oracle.after_failures==0 and
+            .change_bundle.patch_paths==1 and .change_bundle.patch_hunks==1 and .change_bundle.patch_bytes>0 and
+            .change_bundle.rollback_comparisons==1 and .change_bundle.rollback_mismatches==0 and
+            .test_frontier.counts=={total:4,executed:2,reused:1,skipped:1,not_observed:0} and
+            .experience_memory.binding_chain.one_to_one==true and
+            .semantic_close.external_utility.state=="UNKNOWN" and .repository.unchanged==true and
+            all(.activities[]; .state=="CLOSED") and (.metrics|type=="object") and
+            all(.metrics[]; (type=="number" and floor==.))
+          ' "$evidence/scenarios/normal-learning/report.json" >/dev/null
+          for report in "$evidence"/scenarios/*/report.json; do
+            jq -e '.version=="v0.4.0" and .denominator.cells==12 and .metrics.repository_writes==0 and .metrics.local_test_executions==0 and .metrics.cross_project_required_gates==0 and .promotion.authority.repository_writes==0 and .promotion.authority.local_test_executions==0 and .promotion.authority.cross_project_required_gates==0' "$report" >/dev/null
+          done
+          jq -e 'all(.scenarios[]; .authority.repository_writes==0 and .authority.local_test_executions==0 and .authority.cross_project_required_gates==0)' "$evidence/learning-drift-conformance.json" >/dev/null
+          for scenario in new-candidate stale-receipt ambiguous-binding missing-generated-binding; do
+            jq -e ' .decision=="UNKNOWN" and (.unknowns|length)==1 and ((.unknowns[0]|keys|sort)==["blocked_by","next_operation","reason","stage","step","unknown_class"]) and (.refutations|length)==0 ' "$evidence/scenarios/$scenario/report.json" >/dev/null
+          done
+          for scenario in known-contradiction activity-drift relation-drift authority-drift replay-mismatch; do
+            jq -e '.decision=="REFUTED" and (.unknowns|length)==0 and (.refutations|length)>0 and all(.activities[]; .state=="REFUTED")' "$evidence/scenarios/$scenario/report.json" >/dev/null
+          done
       - name: Run all loop scenarios
         shell: bash
         run: |

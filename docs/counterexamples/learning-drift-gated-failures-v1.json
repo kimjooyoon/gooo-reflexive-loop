@@ -1,0 +1,12 @@
+{
+  "schema": "gooo/reflexive-loop/learning-drift-gated/failure-counterexamples/v1",
+  "precedence": ["REFUTED", "UNKNOWN", "CLOSED"],
+  "counterexamples": [
+    {"id":"mutable-drift-release-process","class":"REFUTED","failure":"MUTABLE_PRIOR_RELEASE_OBSERVATION","release_tag":"v0.1.0","used_as_input":false,"reason":"Mutable drift release is retained only as a process counterexample."},
+    {"id":"activity-drift","class":"REFUTED","failure":"SEMANTIC_ACTIVITY_DRIFT","guard_case":"refuted-semantic-activity-drift"},
+    {"id":"relation-drift","class":"REFUTED","failure":"SEMANTIC_RELATION_DRIFT","guard_case":"refuted-semantic-relation-drift"},
+    {"id":"authority-drift","class":"REFUTED","failure":"SEMANTIC_AUTHORITY_DRIFT","guard_case":"refuted-semantic-authority-drift"},
+    {"id":"replay-drift","class":"REFUTED","failure":"OBSERVABLE_REPLAY_MISMATCH","guard_case":"refuted-observable-replay-mismatch"},
+    {"id":"missing-generated-binding","class":"UNKNOWN","failure":"MISSING_GENERATED_BINDING","guard_case":"unknown-missing-generated-binding"}
+  ]
+}

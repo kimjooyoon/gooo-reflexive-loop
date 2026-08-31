@@ -1,0 +1,55 @@
+{
+  "schema": "gooo/reflexive-loop/learning-drift-gated-denominator/v1",
+  "id": "learning-drift-gated-v1",
+  "version": "v1",
+  "release": "v0.4.0",
+  "target_cells": 12,
+  "fixed": true,
+  "state_precedence": ["REFUTED", "UNKNOWN", "CLOSED"],
+  "unknown_fields": ["stage", "step", "reason", "unknown_class", "next_operation", "blocked_by"],
+  "forbidden_fields": ["aggregate_score", "percentage", "utility_inference"],
+  "authority": {
+    "repository_writes": 0,
+    "local_test_executions": 0,
+    "cross_project_required_gates": 0,
+    "apply": 0,
+    "commit": 0,
+    "push": 0,
+    "pull_request": 0,
+    "merge": 0
+  },
+  "proof_totals": {"FOUNDATION": 4, "COHERENCE": 4, "REGRESSION": 4},
+  "indicator_totals": {"DRIVER": 4, "OUTCOME": 4, "GUARDRAIL": 4},
+  "metrics": {
+    "required": [
+      "cycles", "attempts_observed", "candidate_count", "known_refuted_recurrences_before", "known_refuted_recurrences_after",
+      "avoided_refuted_candidates", "refuted_candidates", "unknown_candidates",
+      "drift_comparisons", "drift_equivalent_changes", "drift_changes", "drift_unknown_bindings",
+      "before_oracle_failures", "after_oracle_failures", "patch_paths", "patch_hunks", "patch_bytes",
+      "replay_comparisons", "replay_mismatches", "rollback_comparisons", "rollback_mismatches",
+      "build_wall_ms", "build_peak_rss_kib", "test_wall_ms", "test_peak_rss_kib", "conformance_wall_ms", "conformance_peak_rss_kib",
+      "tests_total", "tests_executed", "tests_reused", "tests_skipped", "tests_not_observed",
+      "go_physical_lines", "go_files", "gooo_physical_lines", "gooo_files", "directories", "files",
+      "output_artifact_files", "output_artifact_bytes", "repository_writes", "local_test_executions", "cross_project_required_gates"
+    ]
+  },
+  "activities": [
+    {"ordinal":1,"id":"EXPERIENCE_RELEASE_OBSERVED","activity":"ObserveExperienceMemoryRelease","stage":"FOUNDATION","step":"OBSERVE_IMMUTABLE_EXPERIENCE_MEMORY_RELEASE","proof_choice":"FOUNDATION","indicator_class":"DRIVER","metric_id":"gooo.metric.learning-drift.experience-release.v1","artifact":"experience-release.json","evaluator":"GitHubAPI"},
+    {"ordinal":2,"id":"EXPERIENCE_BINDING_BOUND","activity":"BindExperienceSourceIRGenerated","stage":"FOUNDATION","step":"BIND_SOURCE_TO_IR_TO_GENERATED_EVALUATOR","proof_choice":"FOUNDATION","indicator_class":"OUTCOME","metric_id":"gooo.metric.learning-drift.experience-binding.v1","artifact":"experience/evaluation.json","evaluator":"gooo-experience-memory"},
+    {"ordinal":3,"id":"APPEND_ONLY_RECEIPT_CONSUMED","activity":"ConsumeAppendOnlyOutcomeReceipt","stage":"FOUNDATION","step":"CONSUME_APPEND_ONLY_OUTCOME_RECEIPT","proof_choice":"FOUNDATION","indicator_class":"GUARDRAIL","metric_id":"gooo.metric.learning-drift.receipt.v1","artifact":"experience/outcome-receipt.json","evaluator":"LoadMemory"},
+    {"ordinal":4,"id":"BASELINE_RECURRENCE_BOUND","activity":"SelectBaselineKnownRefutedCandidate","stage":"FOUNDATION","step":"SELECT_CYCLE_A_BASELINE_CANDIDATE","proof_choice":"FOUNDATION","indicator_class":"DRIVER","metric_id":"gooo.metric.learning-drift.baseline.v1","artifact":"experience/cycle-a.json","evaluator":"SelectBaseline"},
+    {"ordinal":5,"id":"SEMANTIC_TRIPLE_MATCHED","activity":"MatchFingerprintFailureScope","stage":"COHERENCE","step":"MATCH_SEMANTIC_FINGERPRINT_FAILURE_SCOPE","proof_choice":"COHERENCE","indicator_class":"OUTCOME","metric_id":"gooo.metric.learning-drift.match.v1","artifact":"experience/cycle-b.json","evaluator":"AssessCandidate"},
+    {"ordinal":6,"id":"SAFE_CANDIDATE_SELECTED","activity":"SelectCycleBSafeCandidate","stage":"COHERENCE","step":"SELECT_NON_REFUTED_CYCLE_B_CANDIDATE","proof_choice":"COHERENCE","indicator_class":"DRIVER","metric_id":"gooo.metric.learning-drift.selection.v1","artifact":"experience/cycle-b.json","evaluator":"SelectAfter"},
+    {"ordinal":7,"id":"DRIFT_RELEASE_OBSERVED","activity":"BindSemanticDriftGuardRelease","stage":"COHERENCE","step":"OBSERVE_IMMUTABLE_DRIFT_GUARD_RELEASE","proof_choice":"COHERENCE","indicator_class":"GUARDRAIL","metric_id":"gooo.metric.learning-drift.drift-release.v1","artifact":"drift/release.json","evaluator":"GitHubAPI"},
+    {"ordinal":8,"id":"CANONICAL_BINDING_GATED","activity":"GuardCanonicalSourceIRGenerated","stage":"COHERENCE","step":"GUARD_CANONICAL_SOURCE_IR_GENERATED_BINDING","proof_choice":"COHERENCE","indicator_class":"OUTCOME","metric_id":"gooo.metric.learning-drift.canonical-binding.v1","artifact":"drift/comparison-report.json","evaluator":"gooo-semantic-drift-guard"},
+    {"ordinal":9,"id":"DRIFT_PRECEDENCE_CLASSIFIED","activity":"ClassifyDriftPrecedence","stage":"REGRESSION","step":"REFUTE_DRIFT_AND_PRESERVE_UNKNOWN_TUPLE","proof_choice":"REGRESSION","indicator_class":"DRIVER","metric_id":"gooo.metric.learning-drift.precedence.v1","artifact":"drift/decision-receipt.json","evaluator":"Compare"},
+    {"ordinal":10,"id":"DISPOSABLE_PATCH_APPLIED","activity":"ApplySafePatchToTemporaryClone","stage":"REGRESSION","step":"APPLY_ONLY_TO_CALLER_OWNED_TEMP_CLONE","proof_choice":"REGRESSION","indicator_class":"GUARDRAIL","metric_id":"gooo.metric.learning-drift.patch.v1","artifact":"bundle/patch.bundle.json","evaluator":"gooo-change-bundle"},
+    {"ordinal":11,"id":"ORACLE_TEST_FRONTIER_VERIFIED","activity":"VerifyOracleAndTestFrontier","stage":"REGRESSION","step":"VERIFY_EXACT_ORACLE_AND_TEST_FRONTIER","proof_choice":"REGRESSION","indicator_class":"OUTCOME","metric_id":"gooo.metric.learning-drift.regression.v1","artifact":"exact-oracle-pair.json","evaluator":"independent-oracle"},
+    {"ordinal":12,"id":"LEARNING_DRIFT_RECEIPT_EMITTED","activity":"EmitLearningDriftReceipt","stage":"REGRESSION","step":"EMIT_OUTPUT_ONLY_LEARNING_DRIFT_RECEIPT","proof_choice":"REGRESSION","indicator_class":"GUARDRAIL","metric_id":"gooo.metric.learning-drift.receipt.v1","artifact":"learning-drift-conformance.json","evaluator":"BuildReport"}
+  ],
+  "upstream_releases": {
+    "experience_memory": {"repository":"kimjooyoon/gooo-experience-memory","tag":"v0.1.0","release_id":379896833,"tag_object_sha":"9b889fc3dd5b663b5ac1ce7cd975fc89030c4a46","target_commit_sha":"79fd6edc588ea26279dbe735e5f6e250132f7730","immutable":true},
+    "semantic_drift_guard": {"repository":"kimjooyoon/gooo-semantic-drift-guard","tag":"v0.1.1","release_id":379915376,"tag_object_sha":"1e1cf4882347ccd69c14c4aa96e63c096709d512","target_commit_sha":"15b6c1dcce26feb5f64d562140708f7cb27390aa","immutable":true},
+    "mutable_drift_prior": {"tag":"v0.1.0","role":"PROCESS_COUNTEREXAMPLE_ONLY","used_as_input":false}
+  }
+}

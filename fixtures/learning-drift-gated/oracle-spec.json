@@ -1,0 +1,8 @@
+{
+  "schema": "gooo/reflexive-loop/learning-drift-gated/oracle-spec/v1",
+  "workload": "fixtures/learning-drift-gated/workload.gooo",
+  "required_activities": ["ParseWorkItem", "ValidateWorkItem"],
+  "baseline_failure": "MISSING_REQUIRED_ACTIVITY",
+  "candidate_success": "REQUIRED_ACTIVITIES_PRESENT",
+  "independent": true
+}
