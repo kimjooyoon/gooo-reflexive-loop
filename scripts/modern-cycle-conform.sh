@@ -52,6 +52,16 @@ run_case() {
     "$output/report.json" >/dev/null; then
     echo "report contract assertion failed: $scenario" >&2
     jq '{decision,decision_reason,denominator,repository,promotion,unknowns,refutations,metrics}' "$output/report.json" >&2 || true
+    for diagnostic in "$output"/proposer/stderr.txt "$output"/frontier/stderr.txt "$output"/bundle/stderr.txt "$output"/test-frontier/stderr.txt; do
+      if [ -f "$diagnostic" ]; then
+        echo "--- $diagnostic" >&2
+        sed -n '1,240p' "$diagnostic" >&2
+      fi
+    done
+    if [ -f "$output/bundle/bundle-manifest.json" ]; then
+      echo "--- bundle findings" >&2
+      jq '{decision,findings,unknowns,metrics}' "$output/bundle/bundle-manifest.json" >&2 || true
+    fi
     return 1
   fi
   jq -e --arg expected "$(jq -r '.decision' "$output/report.json")" \
