@@ -1,0 +1,64 @@
+{
+  "schema": "gooo/reflexive-loop/external-release-locks/v1",
+  "consumption": "exact_external_input",
+  "cross_project_required_gates": 0,
+  "releases": {
+    "meta_budget": {
+      "repository": "kimjooyoon/gooo-meta-budget",
+      "tag": "v0.1.0",
+      "target_commit_sha": "e71f024d2fdb69866e6c8f4e0e170b64ed6f7ee5",
+      "release_immutable": true,
+      "manifest": {
+        "schema": "gooo/meta-budget/release-manifest/v1",
+        "asset_name": "gooo-meta-budget-v0.1.0-manifest.json",
+        "sha256": "sha256:7ea5ab709f1daf8d130bd7d7813d5a436a613b8774b537dad9865eafb4e6ed15"
+      },
+      "evidence": {
+        "asset_name": "gooo-meta-budget-evidence-v0.1.0.tar.gz",
+        "size_bytes": 2772405,
+        "sha256": "sha256:fa4b9e992048ddbd4c84a9c7d8e17a6b283655f0da0b324488470944f318eee6"
+      },
+      "consumer_entrypoints": {
+        "decision": "paired-decision.json",
+        "fallback_decision": "budget-decision.json",
+        "artifact_report": "artifact-report.json"
+      },
+      "requested_plan": {
+        "id": "select-next-meta-operation",
+        "kind": "STANDARD",
+        "semantic_resolution": "full",
+        "proof_denominator": 6,
+        "privilege_level": "read-only",
+        "operations": ["reuse-verified-evidence", "defer-conformance-replay"]
+      }
+    },
+    "resolution_lattice": {
+      "repository": "kimjooyoon/gooo-resolution-lattice",
+      "tag": "v0.1.0",
+      "target_commit_sha": "7182d0ff5a054fe93ef17cf96386a440b4080323",
+      "release_immutable": true,
+      "manifest": {
+        "schema": "gooo/resolution-lattice/release-manifest/v1",
+        "asset_name": "consumer-manifest.json",
+        "sha256": "sha256:1ae585501de77ff281c1a510d72174f220fee019c4f1811ed295a89627ef7b69"
+      },
+      "evidence": {
+        "asset_name": "gooo-resolution-lattice-v0.1.0-evidence.zip",
+        "size_bytes": 16944,
+        "sha256": "sha256:1c66149af448cd23af8a76f0fc67e23cd4a0ae015f7e10565fe45b425221e571"
+      },
+      "consumer_entrypoints": {
+        "case": "cases/improvement-unknown.json",
+        "receipt": "receipts/improvement-unknown.json"
+      },
+      "unknown_fields": [
+        "stage",
+        "step",
+        "reason",
+        "unknown_class",
+        "next_operation",
+        "blocked_by"
+      ]
+    }
+  }
+}
