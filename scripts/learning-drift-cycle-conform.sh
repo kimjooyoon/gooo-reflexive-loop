@@ -48,10 +48,18 @@ run_case() {
     done
     return "$loop_status"
   fi
-  jq -e --arg scenario "$scenario" --arg expected "$expected" \
+  if ! jq -e --arg scenario "$scenario" --arg expected "$expected" \
     '.schema=="gooo/reflexive-loop/learning-drift-gated/report/v1" and .version=="v0.4.0" and .scenario==$scenario and .decision==$expected and .precedence==["REFUTED","UNKNOWN","CLOSED"] and .denominator.cells==12 and .denominator.proof_totals=={FOUNDATION:4,COHERENCE:4,REGRESSION:4} and .denominator.indicator_totals=={DRIVER:4,OUTCOME:4,GUARDRAIL:4} and (.activities|length)==12 and .repository.unchanged==true and .promotion.mode=="OUTPUT_ONLY" and .metrics.repository_writes==0 and .metrics.local_test_executions==0 and .metrics.cross_project_required_gates==0' \
-    "$output/report.json" >/dev/null
-  jq -e '.schema=="gooo/reflexive-loop/learning-drift-gated/ci-artifact/v1" and .authority.repository_writes==0 and .authority.local_test_executions==0 and .authority.cross_project_required_gates==0 and .authority.apply_authorized==false and .authority.commit_authorized==false and .authority.push_authorized==false and .authority.pull_request_authorized==false and .authority.merge_authorized==false' "$output/ci-artifact.json" >/dev/null
+    "$output/report.json" >/dev/null; then
+    echo "learning-drift report contract assertion failed: $scenario" >&2
+    jq '{schema,version,scenario,decision,decision_reason,denominator,repository,promotion,unknowns,refutations,metrics,experience_memory,semantic_drift_guard,oracle,test_frontier}' "$output/report.json" >&2 || true
+    return 1
+  fi
+  if ! jq -e '.schema=="gooo/reflexive-loop/learning-drift-gated/ci-artifact/v1" and .authority.repository_writes==0 and .authority.local_test_executions==0 and .authority.cross_project_required_gates==0 and .authority.apply_authorized==false and .authority.commit_authorized==false and .authority.push_authorized==false and .authority.pull_request_authorized==false and .authority.merge_authorized==false' "$output/ci-artifact.json" >/dev/null; then
+    echo "learning-drift ci-artifact assertion failed: $scenario" >&2
+    jq '{schema,version,scenario,decision,authority,metrics,artifact}' "$output/ci-artifact.json" >&2 || true
+    return 1
+  fi
   if [ "$class" = "unknown" ]; then
     jq -e '(.unknowns|length)==1 and ((.unknowns[0]|keys|sort)==["blocked_by","next_operation","reason","stage","step","unknown_class"]) and (.refutations|length)==0' "$output/report.json" >/dev/null
   elif [ "$class" = "refuted" ]; then

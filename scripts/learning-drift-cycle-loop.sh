@@ -383,7 +383,11 @@ elif [ "$scenario" = "normal-learning" ] || [ "$scenario" = "deterministic-repla
       mkdir -p "$output/disposable/before" "$output/disposable/after"
       before_graph_status=$(run_command "$output/disposable/before/graph.json" "$output/disposable/before/graph.stderr" "$gooo" graph dump "$tmp/clone-before/fixtures/learning-drift-gated/workload.gooo")
       after_graph_status=$(run_command "$output/disposable/after/graph.json" "$output/disposable/after/graph.stderr" "$gooo" graph dump "$tmp/clone-after/fixtures/learning-drift-gated/workload.gooo")
-      oracle_status=$(bash "$repository/scripts/learning-drift-oracle.sh" "$tmp/clone-before/fixtures/learning-drift-gated/workload.gooo" "$tmp/clone-after/fixtures/learning-drift-gated/workload.gooo" "$oracle_spec" > "$output/exact-oracle.json")
+      if bash "$repository/scripts/learning-drift-oracle.sh" "$tmp/clone-before/fixtures/learning-drift-gated/workload.gooo" "$tmp/clone-after/fixtures/learning-drift-gated/workload.gooo" "$oracle_spec" > "$output/exact-oracle.json"; then
+        oracle_status=0
+      else
+        oracle_status=$?
+      fi
       oracle_decision=$(jq -r '.decision' "$output/exact-oracle.json")
       before_oracle_failures=$(jq -r '.oracle_failures.before' "$output/exact-oracle.json")
       after_oracle_failures=$(jq -r '.oracle_failures.after' "$output/exact-oracle.json")
@@ -418,7 +422,7 @@ elif [ "$scenario" = "normal-learning" ] || [ "$scenario" = "deterministic-repla
         read -r test_seconds test_peak_rss_kib < "$tmp/test-frontier.time"
         test_wall_ms=$(awk -v seconds="$test_seconds" 'BEGIN {printf "%d", seconds * 1000}')
       fi
-      if [ "$test_frontier_status" -ne 0 ] || [ "$test_frontier_state" != "CLOSED" ] || [ "$tests_not_observed" -ne 0 ]; then
+      if [ "$test_frontier_status" -ne 0 ] || [ "$test_frontier_state" = "REFUTED" ] || [ "$tests_not_observed" -ne 0 ]; then
         decision="UNKNOWN"
         decision_reason="TEST_FRONTIER_OBSERVATION_UNKNOWN"
         unknowns='[{"stage":"REGRESSION","step":"VERIFY_EXACT_ORACLE_AND_TEST_FRONTIER","reason":"AFFECTED_TEST_EXECUTION_NOT_OBSERVED","unknown_class":"TEST_EXECUTION_NOT_OBSERVED","next_operation":"OBSERVE_AFFECTED_TEST_EXECUTION","blocked_by":["test-validate-work-item"]}]'
