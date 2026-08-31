@@ -214,7 +214,7 @@ jobs:
           wall_ms=$(( (end_ns - start_ns) / 1000000 ))
           read -r seconds rss < "$RUNNER_TEMP/modern-cycle-time.tsv"
           jq -S --argjson wall_ms "$wall_ms" --argjson rss "${rss:-0}" \
-            '.performance.build_wall_ms=(input.build_wall_ms // 0) | .performance.build_peak_rss_kib=(input.build_peak_rss_kib // 0) | .performance.conformance_wall_ms=$wall_ms | .performance.conformance_peak_rss_kib=$rss' \
+            'input as $build | .performance.build_wall_ms=($build.build_wall_ms // 0) | .performance.build_peak_rss_kib=($build.build_peak_rss_kib // 0) | .performance.conformance_wall_ms=$wall_ms | .performance.conformance_peak_rss_kib=$rss' \
             "$evidence/modern-cycle-conformance.json" "$MODERN_UPSTREAM_ROOT/build-metrics.json" > "$RUNNER_TEMP/modern-cycle-conformance.json"
           mv "$RUNNER_TEMP/modern-cycle-conformance.json" "$evidence/modern-cycle-conformance.json"
           for report in "$evidence"/scenarios/*/report.json; do
