@@ -177,7 +177,7 @@ jobs:
             .tests=={executed:6,reused:0,skipped:0} and
             .cross_project_required_gates==0 and
             .precedence==["REFUTED","UNKNOWN","CLOSED"] and
-            ([.scenarios[].decision]|sort)==["CLOSED","FAIL_CLOSED","FAIL_CLOSED","FAIL_CLOSED","FAIL_CLOSED","FAIL_CLOSED"] and
+            ([.scenarios[].decision]|sort)==["CLOSED","REFUTED","REFUTED","REFUTED","REFUTED","REFUTED"] and
             .normal_external_unknown.state=="UNKNOWN" and .normal_external_unknown.preserved_exactly==true
           ' "$evidence/integration/integrated-conformance.json" >/dev/null
           jq -e '
