@@ -80,6 +80,27 @@ jobs:
             test "$(wc -c < "$output" | awk '{print $1 + 0}')" -eq "$expected_size"
           }
 
+          fetch_public_release_asset() {
+            local release_file=$1
+            local repository=$2
+            local asset_name=$3
+            local expected_digest=$4
+            local expected_size=$5
+            local output=$6
+            local asset_id
+            local asset_digest
+            local asset_size
+            asset_id=$(jq -r --arg name "$asset_name" '[.assets[]|select(.name==$name)][0].id // empty' "$release_file")
+            test -n "$asset_id"
+            asset_digest=$(jq -r --arg name "$asset_name" '[.assets[]|select(.name==$name)][0].digest // empty' "$release_file")
+            asset_size=$(jq -r --arg name "$asset_name" '[.assets[]|select(.name==$name)][0].size // empty' "$release_file")
+            test "$asset_digest" = "$expected_digest"
+            test "$asset_size" -eq "$expected_size"
+            GH_TOKEN="" gh api -H 'Accept: application/octet-stream' "repos/$repository/releases/assets/$asset_id" > "$output"
+            printf '%s  %s\n' "${expected_digest#sha256:}" "$output" | sha256sum -c -
+            test "$(wc -c < "$output" | awk '{print $1 + 0}')" -eq "$expected_size"
+          }
+
           budget_repo=$(jq -r '.releases.meta_budget.repository' "$lock")
           budget_tag=$(jq -r '.releases.meta_budget.tag' "$lock")
           budget_target=$(jq -r '.releases.meta_budget.target_commit_sha' "$lock")
@@ -124,17 +145,17 @@ jobs:
           causal_checksum_name=$(jq -r '.releases.causal_ci.checksum.asset_name' "$lock")
           causal_checksum_digest=$(jq -r '.releases.causal_ci.checksum.sha256' "$lock")
           causal_checksum_size=$(jq -r '.releases.causal_ci.checksum.size_bytes' "$lock")
-          gh api "repos/$causal_repo/releases/tags/$causal_tag" > "$external/causal-release.json"
+          GH_TOKEN="" gh api "repos/$causal_repo/releases/tags/$causal_tag" > "$external/causal-release.json"
           jq -e --arg tag "$causal_tag" '.immutable==true and .tag_name==$tag' "$external/causal-release.json" >/dev/null
-          fetch_release_asset "$external/causal-release.json" "$causal_repo" "$causal_manifest_name" "$causal_manifest_digest" "$causal_manifest_size" "$external/causal-manifest.json"
-          if ! gh api "repos/$causal_repo/git/ref/tags/$causal_tag" > "$external/causal-tag-ref.json"; then
+          fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_manifest_name" "$causal_manifest_digest" "$causal_manifest_size" "$external/causal-manifest.json"
+          if ! GH_TOKEN="" gh api "repos/$causal_repo/git/ref/tags/$causal_tag" > "$external/causal-tag-ref.json"; then
             jq -e --arg target "$causal_target" '.release.target_commit==$target' "$external/causal-manifest.json" >/dev/null
             jq -S -n --arg tag "$causal_tag" --arg target "$causal_target" \
               '{ref:("refs/tags/" + $tag),object:{type:"commit",sha:$target},derived_from:"immutable-consumer-manifest.release.target_commit"}' > "$external/causal-tag-ref.json"
           fi
           jq -e --arg target "$causal_target" '.object.type=="commit" and .object.sha==$target' "$external/causal-tag-ref.json" >/dev/null
-          fetch_release_asset "$external/causal-release.json" "$causal_repo" "$causal_evidence_name" "$causal_evidence_digest" "$causal_evidence_size" "$external/causal-evidence.tar.gz"
-          fetch_release_asset "$external/causal-release.json" "$causal_repo" "$causal_checksum_name" "$causal_checksum_digest" "$causal_checksum_size" "$external/causal-checksum.txt"
+          fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_evidence_name" "$causal_evidence_digest" "$causal_evidence_size" "$external/causal-evidence.tar.gz"
+          fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_checksum_name" "$causal_checksum_digest" "$causal_checksum_size" "$external/causal-checksum.txt"
 
           denominator_repo=$(jq -r '.releases.denominator_protocol.repository' "$lock")
           denominator_tag=$(jq -r '.releases.denominator_protocol.tag' "$lock")
@@ -148,17 +169,17 @@ jobs:
           denominator_checksum_name=$(jq -r '.releases.denominator_protocol.checksum.asset_name' "$lock")
           denominator_checksum_digest=$(jq -r '.releases.denominator_protocol.checksum.sha256' "$lock")
           denominator_checksum_size=$(jq -r '.releases.denominator_protocol.checksum.size_bytes' "$lock")
-          gh api "repos/$denominator_repo/releases/tags/$denominator_tag" > "$external/denominator-release.json"
+          GH_TOKEN="" gh api "repos/$denominator_repo/releases/tags/$denominator_tag" > "$external/denominator-release.json"
           jq -e --arg tag "$denominator_tag" --arg target "$denominator_target" '.immutable==true and .tag_name==$tag and .target_commitish==$target' "$external/denominator-release.json" >/dev/null
-          fetch_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_manifest_name" "$denominator_manifest_digest" "$denominator_manifest_size" "$external/denominator-manifest.json"
-          if ! gh api "repos/$denominator_repo/git/ref/tags/$denominator_tag" > "$external/denominator-tag-ref.json"; then
+          fetch_public_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_manifest_name" "$denominator_manifest_digest" "$denominator_manifest_size" "$external/denominator-manifest.json"
+          if ! GH_TOKEN="" gh api "repos/$denominator_repo/git/ref/tags/$denominator_tag" > "$external/denominator-tag-ref.json"; then
             jq -e --arg target "$denominator_target" '.target_commit==$target' "$external/denominator-manifest.json" >/dev/null
             jq -S -n --arg tag "$denominator_tag" --arg target "$denominator_target" \
               '{ref:("refs/tags/" + $tag),object:{type:"commit",sha:$target},derived_from:"immutable-consumer-manifest.target_commit"}' > "$external/denominator-tag-ref.json"
           fi
           jq -e --arg target "$denominator_target" '.object.type=="commit" and .object.sha==$target' "$external/denominator-tag-ref.json" >/dev/null
-          fetch_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_evidence_name" "$denominator_evidence_digest" "$denominator_evidence_size" "$external/denominator-evidence.tar.gz"
-          fetch_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_checksum_name" "$denominator_checksum_digest" "$denominator_checksum_size" "$external/denominator-checksum.txt"
+          fetch_public_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_evidence_name" "$denominator_evidence_digest" "$denominator_evidence_size" "$external/denominator-evidence.tar.gz"
+          fetch_public_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_checksum_name" "$denominator_checksum_digest" "$denominator_checksum_size" "$external/denominator-checksum.txt"
 
       - name: Run all loop scenarios
         shell: bash
