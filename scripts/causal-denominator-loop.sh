@@ -146,7 +146,7 @@ oracle_promote_ok=false
 authority_bound=true
 
 if ! jq -e --arg tag "$causal_tag" --arg target "$causal_target" \
-  '.immutable==true and .tag_name==$tag and .release_page_verified==true and (.target_commitish=="main" or .target_commitish==$target)' \
+  '.immutable==true and .tag_name==$tag and .release_page_verified==true and (.release_verified_by=="immutable-release-page-and-consumer-manifest" or .release_verified_by=="immutable-consumer-manifest") and (.target_commitish=="main" or .target_commitish==$target)' \
   "$causal_release" >/dev/null 2>&1 ||
   ! jq -e --arg target "$causal_target" '.object.type=="commit" and .object.sha==$target' "$causal_tag_ref" >/dev/null 2>&1 ||
   ! release_asset_matches "$causal_release" "$causal_manifest_name" "$causal_manifest_digest" "$causal_manifest_size" ||
@@ -285,7 +285,7 @@ if [ "$causal_plan_ok" != true ]; then
 fi
 
 if ! jq -e --arg tag "$denominator_tag" --arg target "$denominator_target" \
-  '.immutable==true and .tag_name==$tag and .release_page_verified==true and .target_commitish==$target' "$denominator_release" >/dev/null 2>&1 ||
+  '.immutable==true and .tag_name==$tag and .release_page_verified==true and .release_verified_by=="immutable-consumer-manifest" and .target_commitish==$target' "$denominator_release" >/dev/null 2>&1 ||
   ! jq -e --arg target "$denominator_target" '.object.type=="commit" and .object.sha==$target' "$denominator_tag_ref" >/dev/null 2>&1 ||
   ! release_asset_matches "$denominator_release" "$denominator_manifest_name" "$denominator_manifest_digest" "$denominator_manifest_size" ||
   ! release_asset_matches "$denominator_release" "$denominator_evidence_name" "$denominator_evidence_digest" "$denominator_evidence_size" ||

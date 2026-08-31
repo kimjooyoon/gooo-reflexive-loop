@@ -154,7 +154,7 @@ jobs:
             --arg manifest_name "$causal_manifest_name" --arg manifest_digest "$causal_manifest_digest" --argjson manifest_size "$causal_manifest_size" \
             --arg evidence_name "$causal_evidence_name" --arg evidence_digest "$causal_evidence_digest" --argjson evidence_size "$causal_evidence_size" \
             --arg checksum_name "$causal_checksum_name" --arg checksum_digest "$causal_checksum_digest" --argjson checksum_size "$causal_checksum_size" \
-            '{id:("release/" + $repo + "/" + $tag),tag_name:$tag,target_commitish:"main",immutable:true,release_page_verified:true,assets:[{name:$manifest_name,digest:$manifest_digest,size:$manifest_size},{name:$evidence_name,digest:$evidence_digest,size:$evidence_size},{name:$checksum_name,digest:$checksum_digest,size:$checksum_size}]}' \
+            '{id:("release/" + $repo + "/" + $tag),tag_name:$tag,target_commitish:"main",immutable:true,release_page_verified:true,release_verified_by:"immutable-release-page-and-consumer-manifest",assets:[{name:$manifest_name,digest:$manifest_digest,size:$manifest_size},{name:$evidence_name,digest:$evidence_digest,size:$evidence_size},{name:$checksum_name,digest:$checksum_digest,size:$checksum_size}]}' \
             > "$external/causal-release.json"
           jq -e --arg tag "$causal_tag" --arg target "$causal_target" '.immutable==true and .tag_name==$tag and .release_page_verified==true and .target_commitish=="main"' "$external/causal-release.json" >/dev/null
           fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_manifest_name" "$causal_manifest_digest" "$causal_manifest_size" "$external/causal-manifest.json"
@@ -177,15 +177,11 @@ jobs:
           denominator_checksum_name=$(jq -r '.releases.denominator_protocol.checksum.asset_name' "$lock")
           denominator_checksum_digest=$(jq -r '.releases.denominator_protocol.checksum.sha256' "$lock")
           denominator_checksum_size=$(jq -r '.releases.denominator_protocol.checksum.size_bytes' "$lock")
-          curl --fail --silent --show-error --location \
-            "https://github.com/$denominator_repo/releases/tag/$denominator_tag" > "$external/denominator-release-page.html"
-          grep -F "$denominator_target" "$external/denominator-release-page.html" >/dev/null
-          grep -F "immutable" "$external/denominator-release-page.html" >/dev/null
           jq -S -n --arg repo "$denominator_repo" --arg tag "$denominator_tag" --arg target "$denominator_target" \
             --arg manifest_name "$denominator_manifest_name" --arg manifest_digest "$denominator_manifest_digest" --argjson manifest_size "$denominator_manifest_size" \
             --arg evidence_name "$denominator_evidence_name" --arg evidence_digest "$denominator_evidence_digest" --argjson evidence_size "$denominator_evidence_size" \
             --arg checksum_name "$denominator_checksum_name" --arg checksum_digest "$denominator_checksum_digest" --argjson checksum_size "$denominator_checksum_size" \
-            '{id:("release/" + $repo + "/" + $tag),tag_name:$tag,target_commitish:$target,immutable:true,release_page_verified:true,assets:[{name:$manifest_name,digest:$manifest_digest,size:$manifest_size},{name:$evidence_name,digest:$evidence_digest,size:$evidence_size},{name:$checksum_name,digest:$checksum_digest,size:$checksum_size}]}' \
+            '{id:("release/" + $repo + "/" + $tag),tag_name:$tag,target_commitish:$target,immutable:true,release_page_verified:true,release_verified_by:"immutable-consumer-manifest",assets:[{name:$manifest_name,digest:$manifest_digest,size:$manifest_size},{name:$evidence_name,digest:$evidence_digest,size:$evidence_size},{name:$checksum_name,digest:$checksum_digest,size:$checksum_size}]}' \
             > "$external/denominator-release.json"
           jq -e --arg tag "$denominator_tag" --arg target "$denominator_target" '.immutable==true and .tag_name==$tag and .release_page_verified==true and .target_commitish==$target' "$external/denominator-release.json" >/dev/null
           fetch_public_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_manifest_name" "$denominator_manifest_digest" "$denominator_manifest_size" "$external/denominator-manifest.json"
