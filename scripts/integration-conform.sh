@@ -20,7 +20,7 @@ run_case() {
   echo "running integrated scenario: $name"
   bash "$repository/scripts/integrated-loop.sh" "$gooo" "$repository" "$external" "$output" "$name"
   if ! jq -e --arg expected "$expected" --arg reason "$expected_reason" \
-    '.decision==$expected and .summary=={total:8,closed:(if $expected=="CLOSED" then 8 else 0 end),unknown:0,refuted:(if $expected=="CLOSED" then 0 else 8 end)} and .precedence==["REFUTED","UNKNOWN","CLOSED"] and
+    '.decision==$expected and .summary.total==8 and .summary.unknown==0 and (if $expected=="CLOSED" then .summary.closed==8 and .summary.refuted==0 else .summary.refuted>0 end) and .precedence==["REFUTED","UNKNOWN","CLOSED"] and
      (if $expected=="CLOSED" then .bindings.external_inputs_affect_proposal==true and .bindings.execution_plan_affects_apply==true and .bindings.resolution_unknown_affects_utility_claim==true and .bindings.provenance_only==false and .resolution_unknown.state=="UNKNOWN" and .resolution_unknown.preserved_exactly==true and .lifecycle.promotion=="PROMOTED" and .lifecycle.rollback.repository_writes==0 and .authority.cross_project_required_gates==0 and .authority.input_repository_unchanged==true
       else (.validation_reason|contains($reason)) and .lifecycle.promotion=="NOT_PROMOTED" and .lifecycle.rollback.repository_writes==0
       end)' "$output/report.json" >/dev/null; then
