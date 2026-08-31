@@ -272,10 +272,16 @@ else
       fail causal_plan_ok "CAUSAL_REPORT_BINDING_MISMATCH"
     fi
   fi
-  if ! jq -e '.schema=="gooo/causal-ci/metrics/v1" and .denominator==12 and .closed==12 and .unknown==0 and .refuted==0 and .executed==2 and .reused==1 and .skipped==1' "$causal_metrics" >/dev/null 2>&1; then
+  if ! jq -e '.metrics=={denominator:12,closed:12,unknown:0,refuted:0,executed:2,reused:1,skipped:1}' "$causal_metrics" >/dev/null 2>&1; then
     fail causal_plan_ok "CAUSAL_METRICS_BINDING_MISMATCH"
   fi
-  if ! jq -e '.schema=="gooo/causal-ci/cases/v1" and length==8' "$causal_cases" >/dev/null 2>&1; then
+  if ! jq -e '
+    length==8 and
+    ([.[].id]|sort)==["authority-escalation","digest-mismatch","fixed-point","malformed","missing-binding","normal","refuted-exclusion","stale-graph"] and
+    ([.[]|select(.decision=="CLOSED")]|length)==1 and
+    ([.[]|select(.decision=="UNKNOWN")]|length)==3 and
+    ([.[]|select(.decision=="REFUTED")]|length)==4
+  ' "$causal_cases" >/dev/null 2>&1; then
     fail causal_plan_ok "CAUSAL_CASES_BINDING_MISMATCH"
   fi
 fi
@@ -302,10 +308,10 @@ fi
 if ! jq -e --arg repo "$denominator_repository" --arg tag "$denominator_tag" --arg target "$denominator_target" \
   --arg evidence_name "$denominator_evidence_name" --arg evidence_digest "${denominator_evidence_digest#sha256:}" --argjson evidence_size "$denominator_evidence_size" \
   '.schema=="gooo/denominator/consumer-manifest/v1" and .repository==$repo and .release_tag==$tag and .target_commit==$target and
-   .immutable_release_required==true and .v1=={closed:6,denominator:6,refuted:0,state:"CLOSED",unknown:0} and
-   .v2=={closed:7,denominator:7,refuted:0,state:"CLOSED",unknown:0} and
-   .conformance=={CLOSED:4,REFUTED:6,UNKNOWN:2,percentage:false} and
-   .unknown_case=={closed:5,denominator:6,refuted:0,state:"UNKNOWN",unknown:1} and
+   .immutable_release_required==true and .claims.v1=={closed:6,denominator:6,refuted:0,state:"CLOSED",unknown:0} and
+   .claims.v2=={closed:7,denominator:7,refuted:0,state:"CLOSED",unknown:0} and
+   .claims.conformance=={CLOSED:4,REFUTED:6,UNKNOWN:2,percentage:false} and
+   .claims.unknown_case=={closed:5,denominator:6,refuted:0,state:"UNKNOWN",unknown:1} and
    .migration=={added:1,from:"v1",receipt:"contracts/migration-v1-v2.json",retired:1,split:1,to:"v2"} and
    .assets.evidence_bundle=={media_type:"application/gzip",name:$evidence_name,sha256:$evidence_digest,size_bytes:$evidence_size}' "$denominator_manifest" >/dev/null 2>&1; then
   fail denominator_manifest_ok "DENOMINATOR_MANIFEST_CONTENT_MISMATCH"
