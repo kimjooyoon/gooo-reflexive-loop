@@ -1,0 +1,7 @@
+package learningdriftfixture
+namespace learningdriftfixture
+
+entity WorkItem id "gooo://reflexive-loop/learning-drift/work-item"
+entity WorkItemResult id "gooo://reflexive-loop/learning-drift/work-item-result"
+
+activity ParseWorkItem(WorkItem) -> WorkItemResult

@@ -82,6 +82,28 @@ The modern conformance corpus has three normal, three UNKNOWN, and four
 REFUTED scenarios. All repository writes, local test executions, pull-request
 authority, merge authority, and required cross-project gates remain zero.
 
+## v0.4 learning-and-drift-gated cycle
+
+The v0.4 cycle is a separate fixed 12-cell denominator in
+[`contracts/learning-drift-gated-denominator-v1.json`](contracts/learning-drift-gated-denominator-v1.json).
+It preserves the v0.3.1 denominator and all legacy and modern denominators;
+the new cells cover append-only experience memory, exact semantic source-to-IR-
+to-generated binding, immutable semantic-drift evidence, precedence, a
+temporary-clone patch, an independent oracle, and the affected test frontier.
+No aggregate score, percentage, utility inference, or denominator substitution
+is permitted.
+
+Actions verifies the exact immutable upstream releases locked in
+[`contracts/learning-drift-upstream-release-lock-v1.json`](contracts/learning-drift-upstream-release-lock-v1.json):
+`gooo-experience-memory@v0.1.0` and
+`gooo-semantic-drift-guard@v0.1.1`. The mutable drift `v0.1.0` is retained only
+as a process counterexample and is never consumed as an input. The cycle emits
+three CLOSED replay/receipt cases, four UNKNOWN cases, and five REFUTED cases;
+every UNKNOWN preserves exactly the six-field tuple used by the earlier
+contracts. Build, test, conformance, line-count, artifact, digest, and
+authority values are recorded as integer evidence, while external utility
+remains UNKNOWN without an exact utility pair.
+
 ## Running in CI
 
 The checked-in workflow downloads the pinned Gooo release, performs all

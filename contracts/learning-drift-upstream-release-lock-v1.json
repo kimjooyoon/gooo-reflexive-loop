@@ -1,0 +1,27 @@
+{
+  "schema": "gooo/reflexive-loop/learning-drift-upstream-release-lock/v1",
+  "authority": {"source":"GitHub API", "assets":"immutable release assets", "repository_writes":0, "local_test_executions":0, "cross_project_required_gates":0},
+  "releases": {
+    "experience_memory": {
+      "repository":"kimjooyoon/gooo-experience-memory", "tag":"v0.1.0", "release_id":379896833,
+      "tag_object_sha":"9b889fc3dd5b663b5ac1ce7cd975fc89030c4a46", "target_commit_sha":"79fd6edc588ea26279dbe735e5f6e250132f7730", "immutable":true,
+      "source_asset":"gooo-experience-memory-v0.1.0.tar.gz",
+      "assets":[
+        {"id":538237751,"name":"gooo-experience-memory-evidence-v0.1.0.tar.gz","size":11528,"digest":"sha256:27afa525ccaa5ebdf738fef99615998b51bed85d865ccd6e9367036a46a961f6","role":"evidence"},
+        {"id":538237753,"name":"gooo-experience-memory-v0.1.0.tar.gz","size":25993,"digest":"sha256:177f7c872d4e704f5eba6dd96c43e28bfcab2a714b032188c511f3e7872e5d6d","role":"source"},
+        {"id":538237752,"name":"release-manifest.json","size":555,"digest":"sha256:34e97b1cb9fd2ee520cea5b82acd9ee44272abb7392c8a32ce51a144f397ada1","role":"manifest"},
+        {"id":538237754,"name":"SHA256SUMS","size":229,"digest":"sha256:237c96b9bd3eed13676f0a8a4f0de37c71d75646b6a51a762ba5ca9aa1afb6ca","role":"checksum"}
+      ]
+    },
+    "semantic_drift_guard": {
+      "repository":"kimjooyoon/gooo-semantic-drift-guard", "tag":"v0.1.1", "release_id":379915376,
+      "tag_object_sha":"1e1cf4882347ccd69c14c4aa96e63c096709d512", "target_commit_sha":"15b6c1dcce26feb5f64d562140708f7cb27390aa", "immutable":true,
+      "source_from_exact_target":true,
+      "assets":[
+        {"id":538271587,"name":"evidence-v0.1.1.tar.gz","size":6651,"digest":"sha256:83ea0adf7b59b08147eb24ef16483682d8f21d204dc93ed337d39900ae9e09ec","role":"evidence"},
+        {"id":538271586,"name":"evidence-v0.1.1.tar.gz.sha256","size":113,"digest":"sha256:61e49e62af005dff6a27f43bf20be43d257095bee1b552ab89a433fbe5db111b","role":"checksum"}
+      ]
+    },
+    "mutable_drift_prior": {"tag":"v0.1.0","role":"PROCESS_COUNTEREXAMPLE_ONLY","used_as_input":false}
+  }
+}

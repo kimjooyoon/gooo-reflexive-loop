@@ -1,0 +1,28 @@
+package learningdrift
+namespace learningdrift
+
+entity ExperienceRelease id "gooo://reflexive-loop/learning-drift/experience-release"
+entity ExperienceBinding id "gooo://reflexive-loop/learning-drift/experience-binding"
+entity OutcomeReceipt id "gooo://reflexive-loop/learning-drift/outcome-receipt"
+entity BaselineCandidate id "gooo://reflexive-loop/learning-drift/baseline-candidate"
+entity SemanticMatch id "gooo://reflexive-loop/learning-drift/semantic-match"
+entity SafeCandidate id "gooo://reflexive-loop/learning-drift/safe-candidate"
+entity DriftRelease id "gooo://reflexive-loop/learning-drift/drift-release"
+entity CanonicalBinding id "gooo://reflexive-loop/learning-drift/canonical-binding"
+entity DriftPrecedence id "gooo://reflexive-loop/learning-drift/drift-precedence"
+entity TemporaryClone id "gooo://reflexive-loop/learning-drift/temporary-clone"
+entity RegressionEvidence id "gooo://reflexive-loop/learning-drift/regression-evidence"
+entity LearningReceipt id "gooo://reflexive-loop/learning-drift/learning-receipt"
+
+activity ObserveExperienceMemoryRelease(ExperienceRelease) -> LearningReceipt
+activity BindExperienceSourceIRGenerated(ExperienceBinding) -> LearningReceipt
+activity ConsumeAppendOnlyOutcomeReceipt(OutcomeReceipt) -> LearningReceipt
+activity SelectBaselineKnownRefutedCandidate(BaselineCandidate) -> LearningReceipt
+activity MatchFingerprintFailureScope(SemanticMatch) -> LearningReceipt
+activity SelectCycleBSafeCandidate(SafeCandidate) -> LearningReceipt
+activity BindSemanticDriftGuardRelease(DriftRelease) -> LearningReceipt
+activity GuardCanonicalSourceIRGenerated(CanonicalBinding) -> LearningReceipt
+activity ClassifyDriftPrecedence(DriftPrecedence) -> LearningReceipt
+activity ApplySafePatchToTemporaryClone(TemporaryClone) -> LearningReceipt
+activity VerifyOracleAndTestFrontier(RegressionEvidence) -> LearningReceipt
+activity EmitLearningDriftReceipt(LearningReceipt) -> LearningReceipt
