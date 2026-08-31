@@ -29,10 +29,12 @@ run_case() {
   local class=$3
   local output="$artifact_dir/scenarios/$scenario"
   echo "running modern-cycle scenario: $scenario"
-  set +e
-  bash "$repository/scripts/modern-cycle-loop.sh" "$gooo" "$proposer_bin" "$frontier_bin" "$change_bundle_bin" "$test_frontier_bin" "$repository" "$upstream" "$output" "$scenario"
-  local loop_status=$?
-  set -e
+  local loop_status=0
+  if bash "$repository/scripts/modern-cycle-loop.sh" "$gooo" "$proposer_bin" "$frontier_bin" "$change_bundle_bin" "$test_frontier_bin" "$repository" "$upstream" "$output" "$scenario"; then
+    loop_status=0
+  else
+    loop_status=$?
+  fi
   if [ "$loop_status" -ne 0 ]; then
     echo "modern-cycle scenario failed: $scenario status=$loop_status" >&2
     find "$output" -type f -maxdepth 5 -print >&2 2>/dev/null || true
