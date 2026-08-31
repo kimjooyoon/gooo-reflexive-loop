@@ -29,7 +29,21 @@ run_case() {
   local class=$3
   local output="$artifact_dir/scenarios/$scenario"
   echo "running modern-cycle scenario: $scenario"
+  set +e
   bash "$repository/scripts/modern-cycle-loop.sh" "$gooo" "$proposer_bin" "$frontier_bin" "$change_bundle_bin" "$test_frontier_bin" "$repository" "$upstream" "$output" "$scenario"
+  local loop_status=$?
+  set -e
+  if [ "$loop_status" -ne 0 ]; then
+    echo "modern-cycle scenario failed: $scenario status=$loop_status" >&2
+    find "$output" -type f -maxdepth 5 -print >&2 2>/dev/null || true
+    for diagnostic in "$output"/proposer/stderr.txt "$output"/frontier/stderr.txt "$output"/bundle/stderr.txt "$output"/test-frontier/stderr.txt; do
+      if [ -f "$diagnostic" ]; then
+        echo "--- $diagnostic" >&2
+        sed -n '1,240p' "$diagnostic" >&2
+      fi
+    done
+    return "$loop_status"
+  fi
   jq -e --arg scenario "$scenario" \
     '.schema=="gooo/reflexive-loop/modern-cycle/report/v1" and .version=="v0.3.0" and .scenario==$scenario' \
     "$output/report.json" >/dev/null
