@@ -1,0 +1,87 @@
+{
+  "schema": "gooo/reflexive-loop/causal-denominator-release-locks/v1",
+  "consumption": "exact_external_input",
+  "external_required_status_gates": 0,
+  "releases": {
+    "causal_ci": {
+      "repository": "kimjooyoon/gooo-causal-ci",
+      "tag": "v0.1.0",
+      "target_commit_sha": "c7156aa98fb16f4cbd61592a85851a0c9480f96d",
+      "release_immutable": true,
+      "manifest": {
+        "schema": "gooo/causal-ci/consumer-manifest/v1",
+        "asset_id": 537211731,
+        "asset_name": "consumer-manifest-v0.1.0.json",
+        "size_bytes": 3535,
+        "sha256": "sha256:0bcbec393e13272965d41756888afcb608b03884ca4544e0e617a57b9e194818"
+      },
+      "evidence": {
+        "asset_name": "gooo-causal-ci-evidence-v0.1.0.tar.gz",
+        "asset_id": 537211732,
+        "size_bytes": 4910,
+        "sha256": "sha256:edb4148322da926b181468a98b4fd717499ba6f04763d934ebed3d59eebce29b"
+      },
+      "checksum": {
+        "asset_name": "SHA256SUMS-v0.1.0.txt",
+        "asset_id": 537211733,
+        "size_bytes": 200,
+        "sha256": "sha256:7e272afe915165314212337faa1543848a5b5643590cd2637aa755b420500a01"
+      },
+      "entrypoints": {
+        "activity_plan": "activity-plan.json",
+        "cases": "cases.json",
+        "metrics": "metrics.json",
+        "report": "report.json"
+      },
+      "expected": {
+        "denominator": {
+          "total": 12,
+          "closed": 12,
+          "unknown": 0,
+          "refuted": 0
+        },
+        "tests": {
+          "full": {"executed": 4, "reused": 0, "skipped": 0},
+          "selected": {"executed": 2, "reused": 1, "skipped": 1}
+        },
+        "cases": {"total": 8, "closed": 1, "unknown": 3, "refuted": 4}
+      }
+    },
+    "denominator_protocol": {
+      "repository": "kimjooyoon/gooo-denominator-protocol",
+      "tag": "v0.1.0",
+      "target_commit_sha": "388fcee03b0d77a6b7a16116d1df91381dbe3dcc",
+      "release_immutable": true,
+      "manifest": {
+        "schema": "gooo/denominator/consumer-manifest/v1",
+        "asset_id": 537215531,
+        "asset_name": "gooo-denominator-protocol-v0.1.0-consumer-manifest.json",
+        "size_bytes": 1655,
+        "sha256": "sha256:7bd4c814ddac9c964867931c206c98f0702488833d6791d26bac229535882bda"
+      },
+      "evidence": {
+        "asset_name": "gooo-denominator-protocol-v0.1.0-evidence.tar.gz",
+        "asset_id": 537215532,
+        "size_bytes": 10825,
+        "sha256": "sha256:0933dfeec57a785ec29271bca51cd129cbdd50bc202ed5a5b40d65753e85bcbd"
+      },
+      "checksum": {
+        "asset_name": "gooo-denominator-protocol-v0.1.0-checksums-sha256.txt",
+        "asset_id": 537215530,
+        "size_bytes": 237,
+        "sha256": "sha256:45524b45784205bb39b8d188e235d9dd02029dbd2d939e11ae88b1e2e21b15a6"
+      },
+      "entrypoints": {
+        "v1_contract": "contracts/denominator-v1.json",
+        "v2_contract": "contracts/denominator-v2.json",
+        "migration": "contracts/migration-v1-v2.json",
+        "artifact": "ci-artifact.json"
+      },
+      "expected": {
+        "v1_denominator": 6,
+        "v2_denominator": 7,
+        "migration": {"added": 1, "split": 1, "retired": 1}
+      }
+    }
+  }
+}
