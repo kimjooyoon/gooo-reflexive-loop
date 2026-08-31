@@ -22,8 +22,8 @@ failures_for() {
 
 before_missing=$(failures_for "$before")
 after_missing=$(failures_for "$after")
-before_count=$(printf '%s\n' "$before_missing" | awk 'NF { count++ } END { print count + 0 }')
-after_count=$(printf '%s\n' "$after_missing" | awk 'NF { count++ } END { print count + 0 }')
+before_count=$(jq 'length' <<<"$before_missing")
+after_count=$(jq 'length' <<<"$after_missing")
 
 jq -S -n \
   --arg schema "gooo/reflexive-loop/modern-cycle/oracle-verdict/v1" \
