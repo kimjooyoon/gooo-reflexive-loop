@@ -96,7 +96,8 @@ jobs:
             asset_size=$(jq -r --arg name "$asset_name" '[.assets[]|select(.name==$name)][0].size // empty' "$release_file")
             test "$asset_digest" = "$expected_digest"
             test "$asset_size" -eq "$expected_size"
-            GH_TOKEN="" gh api -H 'Accept: application/octet-stream' "repos/$repository/releases/assets/$asset_id" > "$output"
+            curl --fail --silent --show-error --location -H 'Accept: application/octet-stream' \
+              "https://api.github.com/repos/$repository/releases/assets/$asset_id" > "$output"
             printf '%s  %s\n' "${expected_digest#sha256:}" "$output" | sha256sum -c -
             test "$(wc -c < "$output" | awk '{print $1 + 0}')" -eq "$expected_size"
           }
@@ -145,10 +146,12 @@ jobs:
           causal_checksum_name=$(jq -r '.releases.causal_ci.checksum.asset_name' "$lock")
           causal_checksum_digest=$(jq -r '.releases.causal_ci.checksum.sha256' "$lock")
           causal_checksum_size=$(jq -r '.releases.causal_ci.checksum.size_bytes' "$lock")
-          GH_TOKEN="" gh api "repos/$causal_repo/releases/tags/$causal_tag" > "$external/causal-release.json"
+          curl --fail --silent --show-error --location -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$causal_repo/releases/tags/$causal_tag" > "$external/causal-release.json"
           jq -e --arg tag "$causal_tag" '.immutable==true and .tag_name==$tag' "$external/causal-release.json" >/dev/null
           fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_manifest_name" "$causal_manifest_digest" "$causal_manifest_size" "$external/causal-manifest.json"
-          if ! GH_TOKEN="" gh api "repos/$causal_repo/git/ref/tags/$causal_tag" > "$external/causal-tag-ref.json"; then
+          if ! curl --fail --silent --show-error --location -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$causal_repo/git/ref/tags/$causal_tag" > "$external/causal-tag-ref.json"; then
             jq -e --arg target "$causal_target" '.release.target_commit==$target' "$external/causal-manifest.json" >/dev/null
             jq -S -n --arg tag "$causal_tag" --arg target "$causal_target" \
               '{ref:("refs/tags/" + $tag),object:{type:"commit",sha:$target},derived_from:"immutable-consumer-manifest.release.target_commit"}' > "$external/causal-tag-ref.json"
@@ -169,10 +172,12 @@ jobs:
           denominator_checksum_name=$(jq -r '.releases.denominator_protocol.checksum.asset_name' "$lock")
           denominator_checksum_digest=$(jq -r '.releases.denominator_protocol.checksum.sha256' "$lock")
           denominator_checksum_size=$(jq -r '.releases.denominator_protocol.checksum.size_bytes' "$lock")
-          GH_TOKEN="" gh api "repos/$denominator_repo/releases/tags/$denominator_tag" > "$external/denominator-release.json"
+          curl --fail --silent --show-error --location -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$denominator_repo/releases/tags/$denominator_tag" > "$external/denominator-release.json"
           jq -e --arg tag "$denominator_tag" --arg target "$denominator_target" '.immutable==true and .tag_name==$tag and .target_commitish==$target' "$external/denominator-release.json" >/dev/null
           fetch_public_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_manifest_name" "$denominator_manifest_digest" "$denominator_manifest_size" "$external/denominator-manifest.json"
-          if ! GH_TOKEN="" gh api "repos/$denominator_repo/git/ref/tags/$denominator_tag" > "$external/denominator-tag-ref.json"; then
+          if ! curl --fail --silent --show-error --location -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$denominator_repo/git/ref/tags/$denominator_tag" > "$external/denominator-tag-ref.json"; then
             jq -e --arg target "$denominator_target" '.target_commit==$target' "$external/denominator-manifest.json" >/dev/null
             jq -S -n --arg tag "$denominator_tag" --arg target "$denominator_target" \
               '{ref:("refs/tags/" + $tag),object:{type:"commit",sha:$target},derived_from:"immutable-consumer-manifest.target_commit"}' > "$external/denominator-tag-ref.json"
