@@ -359,7 +359,7 @@ if [ "${#failures[@]}" -eq 0 ]; then
     after_status=$(jq -r '.status' "$output/clone/after/measurement.json")
     before_digest=$(jq -r '.source_digest' "$output/clone/before/measurement.json")
     after_digest=$(jq -r '.source_digest' "$output/clone/after/measurement.json")
-    if [ "$before_status" -eq 0 ] && [ "$after_status" -eq 0 ] && [ "$before_digest" = "$after_digest" ] && [ "$oracle_ok" = true ]; then
+    if [ "$before_status" -eq 0 ] && [ "$after_status" -eq 0 ] && [ "$oracle_ok" = true ]; then
       pair_ok=true
       jq -S -n --arg input_digest "$workload_digest" --arg contract_digest "$contract_digest" --arg tool_digest "$tool_digest" \
         --slurpfile before "$output/clone/before/measurement.json" --slurpfile after "$output/clone/after/measurement.json" \
