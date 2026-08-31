@@ -99,7 +99,7 @@ jobs:
             test "$asset_digest" = "$expected_digest"
             test "$asset_size" -eq "$expected_size"
             if ! gh api -H 'Accept: application/octet-stream' "repos/$repository/releases/assets/$asset_id" > "$output"; then
-              wget -q --show-progress --server-response \
+              wget --server-response \
                 --header='Accept: application/octet-stream' \
                 "https://github.com/$repository/releases/download/$tag/$asset_name?download=1" -O "$output"
             fi
