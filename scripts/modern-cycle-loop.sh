@@ -302,10 +302,12 @@ else
       '{schema:"gooo/change-bundle/authority-receipt/v1",receipt_id:"modern-cycle-authority",proposal_id:$proposal_id,proposal_digest:$proposal_digest,intent_digest:$intent_digest,approved:true,approved_by:"modern-cycle-human-authority",repository_writes:0,local_test_executions:0,cross_project_required_gates:0,apply_authorized:false,commit_authorized:false,push_authorized:false,pull_request_authorized:false,merge_authorized:false,receipt_digest:""}' > "$tmp/authority-body.json"
     authority_digest=$(json_digest "$tmp/authority-body.json" '.receipt_digest=""')
     jq -S --arg digest "$authority_digest" '.receipt_digest=$digest' "$tmp/authority-body.json" > "$tmp/authority.json"
-    mkdir -p "$output/bundle"
-    bundle_status=$(run_command "$output/bundle/stdout.txt" "$output/bundle/stderr.txt" \
+    bundle_status=$(run_command "$tmp/bundle.stdout.txt" "$tmp/bundle.stderr.txt" \
       "$change_bundle_bin" materialize --source-root "$tmp/clone-before" --source-digest "$source_tree_digest" \
       --proposal "$tmp/approved-proposal.json" --authority "$tmp/authority.json" --intent "$intent" --contract "$bundle_contract" --out "$output/bundle")
+    mkdir -p "$output/bundle"
+    cp "$tmp/bundle.stdout.txt" "$output/bundle/stdout.txt"
+    cp "$tmp/bundle.stderr.txt" "$output/bundle/stderr.txt"
     if [ "$bundle_status" -eq 0 ] && [ -f "$output/bundle/bundle-manifest.json" ]; then
       bundle_state=$(jq -r '.decision // "REFUTED"' "$output/bundle/bundle-manifest.json")
       patch_paths=$(jq -r '.metrics.changed_paths // 0' "$output/bundle/bundle-manifest.json")
