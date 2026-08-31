@@ -29,6 +29,7 @@ if [ -n "$(find "$output" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
 fi
 
 tmp=$(mktemp -d)
+trap 'status=$?; echo "modern-cycle-loop internal failure: line=${LINENO} status=$status command=${BASH_COMMAND}" >&2; exit "$status"' ERR
 trap 'rm -rf "$tmp"' EXIT
 
 denominator="$repository/contracts/modern-cycle-denominator-v1.json"
