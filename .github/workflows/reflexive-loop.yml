@@ -97,7 +97,7 @@ jobs:
             test "$asset_digest" = "$expected_digest"
             test "$asset_size" -eq "$expected_size"
             curl --fail --silent --show-error --location --retry 2 --retry-all-errors \
-              -H "Authorization: Bearer $GH_TOKEN" -H 'Cache-Control: no-cache' -H 'User-Agent: gooo-reflexive-loop-ci' -H 'Accept: application/octet-stream' \
+              -H 'Cache-Control: no-cache' -H 'User-Agent: gooo-reflexive-loop-ci' -H 'Accept: application/octet-stream' \
               "https://github.com/$repository/releases/download/$tag/$asset_name?download=1&run=$GITHUB_RUN_ID" > "$output"
             printf '%s  %s\n' "${expected_digest#sha256:}" "$output" | sha256sum -c -
             test "$(wc -c < "$output" | awk '{print $1 + 0}')" -eq "$expected_size"
