@@ -152,6 +152,73 @@ jobs:
           fetch_release_asset "$external/lattice-release.json" "$lattice_repo" "$lattice_manifest_name" "$lattice_manifest_digest" "$lattice_manifest_size" "$external/lattice-manifest.json"
           fetch_release_asset "$external/lattice-release.json" "$lattice_repo" "$lattice_evidence_name" "$lattice_evidence_digest" "$lattice_evidence_size" "$external/lattice-evidence.zip"
 
+          causal_lock="$GITHUB_WORKSPACE/contracts/causal-denominator-release-locks-v1.json"
+          causal_repo=$(jq -r '.releases.causal_ci.repository' "$causal_lock")
+          causal_tag=$(jq -r '.releases.causal_ci.tag' "$causal_lock")
+          causal_target=$(jq -r '.releases.causal_ci.target_commit_sha' "$causal_lock")
+          causal_manifest_name=$(jq -r '.releases.causal_ci.manifest.asset_name' "$causal_lock")
+          causal_manifest_size=$(jq -r '.releases.causal_ci.manifest.size_bytes' "$causal_lock")
+          causal_manifest_digest=$(jq -r '.releases.causal_ci.manifest.sha256' "$causal_lock")
+          causal_manifest_id=$(jq -r '.releases.causal_ci.manifest.asset_id' "$causal_lock")
+          causal_evidence_name=$(jq -r '.releases.causal_ci.evidence.asset_name' "$causal_lock")
+          causal_evidence_digest=$(jq -r '.releases.causal_ci.evidence.sha256' "$causal_lock")
+          causal_evidence_size=$(jq -r '.releases.causal_ci.evidence.size_bytes' "$causal_lock")
+          causal_evidence_id=$(jq -r '.releases.causal_ci.evidence.asset_id' "$causal_lock")
+          causal_checksum_name=$(jq -r '.releases.causal_ci.checksum.asset_name' "$causal_lock")
+          causal_checksum_digest=$(jq -r '.releases.causal_ci.checksum.sha256' "$causal_lock")
+          causal_checksum_size=$(jq -r '.releases.causal_ci.checksum.size_bytes' "$causal_lock")
+          causal_checksum_id=$(jq -r '.releases.causal_ci.checksum.asset_id' "$causal_lock")
+          causal_live_target=$(git ls-remote "https://github.com/$causal_repo.git" "refs/tags/$causal_tag" | awk '$2=="refs/tags/'"$causal_tag"'" {print $1}')
+          test "$causal_live_target" = "$causal_target"
+          jq -S -n --arg repo "$causal_repo" --arg tag "$causal_tag" --arg target "$causal_target" \
+            --arg manifest_name "$causal_manifest_name" --arg manifest_digest "$causal_manifest_digest" --argjson manifest_size "$causal_manifest_size" \
+            --arg evidence_name "$causal_evidence_name" --arg evidence_digest "$causal_evidence_digest" --argjson evidence_size "$causal_evidence_size" \
+            --arg checksum_name "$causal_checksum_name" --arg checksum_digest "$causal_checksum_digest" --argjson checksum_size "$causal_checksum_size" \
+            --argjson manifest_id "$causal_manifest_id" --argjson evidence_id "$causal_evidence_id" --argjson checksum_id "$causal_checksum_id" \
+            '{id:("release/" + $repo + "/" + $tag),tag_name:$tag,target_commitish:"main",immutable:true,release_page_verified:true,release_verified_by:"immutable-consumer-manifest",assets:[{id:$manifest_id,name:$manifest_name,digest:$manifest_digest,size:$manifest_size},{id:$evidence_id,name:$evidence_name,digest:$evidence_digest,size:$evidence_size},{id:$checksum_id,name:$checksum_name,digest:$checksum_digest,size:$checksum_size}]}' \
+            > "$external/causal-release.json"
+          jq -e --arg tag "$causal_tag" --arg target "$causal_target" '.immutable==true and .tag_name==$tag and .release_page_verified==true and .target_commitish=="main"' "$external/causal-release.json" >/dev/null
+          fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_manifest_name" "$causal_manifest_digest" "$causal_manifest_size" "$external/causal-manifest.json"
+          jq -e --arg target "$causal_target" '.release.target_commit==$target' "$external/causal-manifest.json" >/dev/null
+          jq -S -n --arg tag "$causal_tag" --arg target "$causal_target" \
+            '{ref:("refs/tags/" + $tag),object:{type:"commit",sha:$target},derived_from:"immutable-consumer-manifest.release.target_commit"}' > "$external/causal-tag-ref.json"
+          jq -e --arg target "$causal_target" '.object.type=="commit" and .object.sha==$target' "$external/causal-tag-ref.json" >/dev/null
+          fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_evidence_name" "$causal_evidence_digest" "$causal_evidence_size" "$external/causal-evidence.tar.gz"
+          fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_checksum_name" "$causal_checksum_digest" "$causal_checksum_size" "$external/causal-checksum.txt"
+
+          denominator_repo=$(jq -r '.releases.denominator_protocol.repository' "$causal_lock")
+          denominator_tag=$(jq -r '.releases.denominator_protocol.tag' "$causal_lock")
+          denominator_target=$(jq -r '.releases.denominator_protocol.target_commit_sha' "$causal_lock")
+          denominator_manifest_name=$(jq -r '.releases.denominator_protocol.manifest.asset_name' "$causal_lock")
+          denominator_manifest_size=$(jq -r '.releases.denominator_protocol.manifest.size_bytes' "$causal_lock")
+          denominator_manifest_digest=$(jq -r '.releases.denominator_protocol.manifest.sha256' "$causal_lock")
+          denominator_manifest_id=$(jq -r '.releases.denominator_protocol.manifest.asset_id' "$causal_lock")
+          denominator_evidence_name=$(jq -r '.releases.denominator_protocol.evidence.asset_name' "$causal_lock")
+          denominator_evidence_digest=$(jq -r '.releases.denominator_protocol.evidence.sha256' "$causal_lock")
+          denominator_evidence_size=$(jq -r '.releases.denominator_protocol.evidence.size_bytes' "$causal_lock")
+          denominator_evidence_id=$(jq -r '.releases.denominator_protocol.evidence.asset_id' "$causal_lock")
+          denominator_checksum_name=$(jq -r '.releases.denominator_protocol.checksum.asset_name' "$causal_lock")
+          denominator_checksum_digest=$(jq -r '.releases.denominator_protocol.checksum.sha256' "$causal_lock")
+          denominator_checksum_size=$(jq -r '.releases.denominator_protocol.checksum.size_bytes' "$causal_lock")
+          denominator_checksum_id=$(jq -r '.releases.denominator_protocol.checksum.asset_id' "$causal_lock")
+          denominator_live_target=$(git ls-remote "https://github.com/$denominator_repo.git" "refs/tags/$denominator_tag" | awk '$2=="refs/tags/'"$denominator_tag"'" {print $1}')
+          test "$denominator_live_target" = "$denominator_target"
+          jq -S -n --arg repo "$denominator_repo" --arg tag "$denominator_tag" --arg target "$denominator_target" \
+            --arg manifest_name "$denominator_manifest_name" --arg manifest_digest "$denominator_manifest_digest" --argjson manifest_size "$denominator_manifest_size" \
+            --arg evidence_name "$denominator_evidence_name" --arg evidence_digest "$denominator_evidence_digest" --argjson evidence_size "$denominator_evidence_size" \
+            --arg checksum_name "$denominator_checksum_name" --arg checksum_digest "$denominator_checksum_digest" --argjson checksum_size "$denominator_checksum_size" \
+            --argjson manifest_id "$denominator_manifest_id" --argjson evidence_id "$denominator_evidence_id" --argjson checksum_id "$denominator_checksum_id" \
+            '{id:("release/" + $repo + "/" + $tag),tag_name:$tag,target_commitish:$target,immutable:true,release_page_verified:true,release_verified_by:"immutable-consumer-manifest",assets:[{id:$manifest_id,name:$manifest_name,digest:$manifest_digest,size:$manifest_size},{id:$evidence_id,name:$evidence_name,digest:$evidence_digest,size:$evidence_size},{id:$checksum_id,name:$checksum_name,digest:$checksum_digest,size:$checksum_size}]}' \
+            > "$external/denominator-release.json"
+          jq -e --arg tag "$denominator_tag" --arg target "$denominator_target" '.immutable==true and .tag_name==$tag and .release_page_verified==true and .target_commitish==$target' "$external/denominator-release.json" >/dev/null
+          fetch_public_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_manifest_name" "$denominator_manifest_digest" "$denominator_manifest_size" "$external/denominator-manifest.json"
+          jq -e --arg target "$denominator_target" '.target_commit==$target' "$external/denominator-manifest.json" >/dev/null
+          jq -S -n --arg tag "$denominator_tag" --arg target "$denominator_target" \
+            '{ref:("refs/tags/" + $tag),object:{type:"commit",sha:$target},derived_from:"immutable-consumer-manifest.target_commit"}' > "$external/denominator-tag-ref.json"
+          jq -e --arg target "$denominator_target" '.object.type=="commit" and .object.sha==$target' "$external/denominator-tag-ref.json" >/dev/null
+          fetch_public_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_evidence_name" "$denominator_evidence_digest" "$denominator_evidence_size" "$external/denominator-evidence.tar.gz"
+          fetch_public_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_checksum_name" "$denominator_checksum_digest" "$denominator_checksum_size" "$external/denominator-checksum.txt"
+
       - name: Download and build exact v0.3 upstream releases
         shell: bash
         run: |
@@ -293,73 +360,6 @@ jobs:
           ' "$evidence/scenarios/normal-candidate/report.json" >/dev/null
           jq -e '.decision=="UNKNOWN" and .unknowns[0].unknown_class=="TEST_EXECUTION_NOT_OBSERVED" and .metrics.tests_not_observed==1' "$evidence/scenarios/missing-utility/report.json" >/dev/null
           jq -e '.decision=="REFUTED" and (.refutations|index("FALSE_NEGATIVE_COUNTEREXAMPLE_PRESENT"))!=null' "$evidence/scenarios/false-negative-test-selection/report.json" >/dev/null
-          causal_lock="$GITHUB_WORKSPACE/contracts/causal-denominator-release-locks-v1.json"
-          causal_repo=$(jq -r '.releases.causal_ci.repository' "$causal_lock")
-          causal_tag=$(jq -r '.releases.causal_ci.tag' "$causal_lock")
-          causal_target=$(jq -r '.releases.causal_ci.target_commit_sha' "$causal_lock")
-          causal_manifest_name=$(jq -r '.releases.causal_ci.manifest.asset_name' "$causal_lock")
-          causal_manifest_size=$(jq -r '.releases.causal_ci.manifest.size_bytes' "$causal_lock")
-          causal_manifest_digest=$(jq -r '.releases.causal_ci.manifest.sha256' "$causal_lock")
-          causal_manifest_id=$(jq -r '.releases.causal_ci.manifest.asset_id' "$causal_lock")
-          causal_evidence_name=$(jq -r '.releases.causal_ci.evidence.asset_name' "$causal_lock")
-          causal_evidence_digest=$(jq -r '.releases.causal_ci.evidence.sha256' "$causal_lock")
-          causal_evidence_size=$(jq -r '.releases.causal_ci.evidence.size_bytes' "$causal_lock")
-          causal_evidence_id=$(jq -r '.releases.causal_ci.evidence.asset_id' "$causal_lock")
-          causal_checksum_name=$(jq -r '.releases.causal_ci.checksum.asset_name' "$causal_lock")
-          causal_checksum_digest=$(jq -r '.releases.causal_ci.checksum.sha256' "$causal_lock")
-          causal_checksum_size=$(jq -r '.releases.causal_ci.checksum.size_bytes' "$causal_lock")
-          causal_checksum_id=$(jq -r '.releases.causal_ci.checksum.asset_id' "$causal_lock")
-          causal_live_target=$(git ls-remote "https://github.com/$causal_repo.git" "refs/tags/$causal_tag" | awk '$2=="refs/tags/'"$causal_tag"'" {print $1}')
-          test "$causal_live_target" = "$causal_target"
-          jq -S -n --arg repo "$causal_repo" --arg tag "$causal_tag" --arg target "$causal_target" \
-            --arg manifest_name "$causal_manifest_name" --arg manifest_digest "$causal_manifest_digest" --argjson manifest_size "$causal_manifest_size" \
-            --arg evidence_name "$causal_evidence_name" --arg evidence_digest "$causal_evidence_digest" --argjson evidence_size "$causal_evidence_size" \
-            --arg checksum_name "$causal_checksum_name" --arg checksum_digest "$causal_checksum_digest" --argjson checksum_size "$causal_checksum_size" \
-            --argjson manifest_id "$causal_manifest_id" --argjson evidence_id "$causal_evidence_id" --argjson checksum_id "$causal_checksum_id" \
-            '{id:("release/" + $repo + "/" + $tag),tag_name:$tag,target_commitish:"main",immutable:true,release_page_verified:true,release_verified_by:"immutable-consumer-manifest",assets:[{id:$manifest_id,name:$manifest_name,digest:$manifest_digest,size:$manifest_size},{id:$evidence_id,name:$evidence_name,digest:$evidence_digest,size:$evidence_size},{id:$checksum_id,name:$checksum_name,digest:$checksum_digest,size:$checksum_size}]}' \
-            > "$external/causal-release.json"
-          jq -e --arg tag "$causal_tag" --arg target "$causal_target" '.immutable==true and .tag_name==$tag and .release_page_verified==true and .target_commitish=="main"' "$external/causal-release.json" >/dev/null
-          fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_manifest_name" "$causal_manifest_digest" "$causal_manifest_size" "$external/causal-manifest.json"
-          jq -e --arg target "$causal_target" '.release.target_commit==$target' "$external/causal-manifest.json" >/dev/null
-          jq -S -n --arg tag "$causal_tag" --arg target "$causal_target" \
-            '{ref:("refs/tags/" + $tag),object:{type:"commit",sha:$target},derived_from:"immutable-consumer-manifest.release.target_commit"}' > "$external/causal-tag-ref.json"
-          jq -e --arg target "$causal_target" '.object.type=="commit" and .object.sha==$target' "$external/causal-tag-ref.json" >/dev/null
-          fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_evidence_name" "$causal_evidence_digest" "$causal_evidence_size" "$external/causal-evidence.tar.gz"
-          fetch_public_release_asset "$external/causal-release.json" "$causal_repo" "$causal_checksum_name" "$causal_checksum_digest" "$causal_checksum_size" "$external/causal-checksum.txt"
-
-          denominator_repo=$(jq -r '.releases.denominator_protocol.repository' "$causal_lock")
-          denominator_tag=$(jq -r '.releases.denominator_protocol.tag' "$causal_lock")
-          denominator_target=$(jq -r '.releases.denominator_protocol.target_commit_sha' "$causal_lock")
-          denominator_manifest_name=$(jq -r '.releases.denominator_protocol.manifest.asset_name' "$causal_lock")
-          denominator_manifest_size=$(jq -r '.releases.denominator_protocol.manifest.size_bytes' "$causal_lock")
-          denominator_manifest_digest=$(jq -r '.releases.denominator_protocol.manifest.sha256' "$causal_lock")
-          denominator_manifest_id=$(jq -r '.releases.denominator_protocol.manifest.asset_id' "$causal_lock")
-          denominator_evidence_name=$(jq -r '.releases.denominator_protocol.evidence.asset_name' "$causal_lock")
-          denominator_evidence_digest=$(jq -r '.releases.denominator_protocol.evidence.sha256' "$causal_lock")
-          denominator_evidence_size=$(jq -r '.releases.denominator_protocol.evidence.size_bytes' "$causal_lock")
-          denominator_evidence_id=$(jq -r '.releases.denominator_protocol.evidence.asset_id' "$causal_lock")
-          denominator_checksum_name=$(jq -r '.releases.denominator_protocol.checksum.asset_name' "$causal_lock")
-          denominator_checksum_digest=$(jq -r '.releases.denominator_protocol.checksum.sha256' "$causal_lock")
-          denominator_checksum_size=$(jq -r '.releases.denominator_protocol.checksum.size_bytes' "$causal_lock")
-          denominator_checksum_id=$(jq -r '.releases.denominator_protocol.checksum.asset_id' "$causal_lock")
-          denominator_live_target=$(git ls-remote "https://github.com/$denominator_repo.git" "refs/tags/$denominator_tag" | awk '$2=="refs/tags/'"$denominator_tag"'" {print $1}')
-          test "$denominator_live_target" = "$denominator_target"
-          jq -S -n --arg repo "$denominator_repo" --arg tag "$denominator_tag" --arg target "$denominator_target" \
-            --arg manifest_name "$denominator_manifest_name" --arg manifest_digest "$denominator_manifest_digest" --argjson manifest_size "$denominator_manifest_size" \
-            --arg evidence_name "$denominator_evidence_name" --arg evidence_digest "$denominator_evidence_digest" --argjson evidence_size "$denominator_evidence_size" \
-            --arg checksum_name "$denominator_checksum_name" --arg checksum_digest "$denominator_checksum_digest" --argjson checksum_size "$denominator_checksum_size" \
-            --argjson manifest_id "$denominator_manifest_id" --argjson evidence_id "$denominator_evidence_id" --argjson checksum_id "$denominator_checksum_id" \
-            '{id:("release/" + $repo + "/" + $tag),tag_name:$tag,target_commitish:$target,immutable:true,release_page_verified:true,release_verified_by:"immutable-consumer-manifest",assets:[{id:$manifest_id,name:$manifest_name,digest:$manifest_digest,size:$manifest_size},{id:$evidence_id,name:$evidence_name,digest:$evidence_digest,size:$evidence_size},{id:$checksum_id,name:$checksum_name,digest:$checksum_digest,size:$checksum_size}]}' \
-            > "$external/denominator-release.json"
-          jq -e --arg tag "$denominator_tag" --arg target "$denominator_target" '.immutable==true and .tag_name==$tag and .release_page_verified==true and .target_commitish==$target' "$external/denominator-release.json" >/dev/null
-          fetch_public_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_manifest_name" "$denominator_manifest_digest" "$denominator_manifest_size" "$external/denominator-manifest.json"
-          jq -e --arg target "$denominator_target" '.target_commit==$target' "$external/denominator-manifest.json" >/dev/null
-          jq -S -n --arg tag "$denominator_tag" --arg target "$denominator_target" \
-            '{ref:("refs/tags/" + $tag),object:{type:"commit",sha:$target},derived_from:"immutable-consumer-manifest.target_commit"}' > "$external/denominator-tag-ref.json"
-          jq -e --arg target "$denominator_target" '.object.type=="commit" and .object.sha==$target' "$external/denominator-tag-ref.json" >/dev/null
-          fetch_public_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_evidence_name" "$denominator_evidence_digest" "$denominator_evidence_size" "$external/denominator-evidence.tar.gz"
-          fetch_public_release_asset "$external/denominator-release.json" "$denominator_repo" "$denominator_checksum_name" "$denominator_checksum_digest" "$denominator_checksum_size" "$external/denominator-checksum.txt"
-
       - name: Run all loop scenarios
         shell: bash
         run: |
