@@ -212,7 +212,7 @@ if ! jq -e --arg repo "$lattice_repository" --arg tag "$lattice_tag" --arg targe
    .release.immutable_policy_enabled==true and .release.immutable_verified_after_publish==true and
    .provenance.artifact_size_bytes==$evidence_size and .provenance.artifact_digest==( "sha256:" + $evidence_digest ) and
    .consumer_entrypoints.evidence_bundle==$evidence_name and
-   .consumer_entrypoints.case=="cases/improvement-unknown.json" and .consumer_entrypoints.receipt=="receipts/improvement-unknown.json" and
+   .consumer_entrypoints.normal_receipts=="receipts/normal.json" and
    .conformance.cells=={"numerator":12,"denominator":12} and .conformance.proof_choices.FOUNDATION=={"numerator":4,"denominator":4} and
    .conformance.proof_choices.COHERENCE=={"numerator":4,"denominator":4} and .conformance.proof_choices.REGRESSION=={"numerator":4,"denominator":4} and
    .conformance.indicator_classes.DRIVER=={"numerator":4,"denominator":4} and .conformance.indicator_classes.OUTCOME=={"numerator":4,"denominator":4} and
