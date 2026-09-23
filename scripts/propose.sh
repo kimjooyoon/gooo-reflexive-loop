@@ -18,14 +18,23 @@ claim_valid=false
 receipt_valid=false
 jq -e '
   .schema=="gooo/reflexive-loop/claim/v1" and
-  (.id|type)=="string" and (.state|type)=="string" and (.target|type)=="string" and
-  (.requested_change|type)=="string" and (.contract_digest|type)=="string" and
-  (.caller|type)=="string" and (.approver|type)=="string" and (.authority|type)=="object"
+  (.id|type)=="string" and (.id|length)>0 and
+  (.state|type)=="string" and (.state|length)>0 and
+  (.target|type)=="string" and (.target|length)>0 and
+  (.requested_change|type)=="string" and (.requested_change|length)>0 and
+  (.contract_digest|type)=="string" and (.contract_digest|length)>0 and
+  (.caller|type)=="string" and (.caller|length)>0 and
+  (.approver|type)=="string" and (.approver|length)>0 and
+  (.authority|type)=="object"
 ' "$claim" >/dev/null 2>&1 && claim_valid=true
 jq -e '
   .schema=="gooo/reflexive-loop/observation-receipt/v1" and
-  (.id|type)=="string" and (.claim_id|type)=="string" and (.state|type)=="string" and
-  (.source_digest|type)=="string" and (.workload_digest|type)=="string" and (.contract_digest|type)=="string"
+  (.id|type)=="string" and (.id|length)>0 and
+  (.claim_id|type)=="string" and (.claim_id|length)>0 and
+  (.state|type)=="string" and (.state|length)>0 and
+  (.source_digest|type)=="string" and (.source_digest|length)>0 and
+  (.workload_digest|type)=="string" and (.workload_digest|length)>0 and
+  (.contract_digest|type)=="string" and (.contract_digest|length)>0
 ' "$receipt" >/dev/null 2>&1 && receipt_valid=true
 
 if [ "$claim_valid" != true ] || [ "$receipt_valid" != true ]; then

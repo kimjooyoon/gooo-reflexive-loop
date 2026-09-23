@@ -70,7 +70,7 @@ jq -S '.authority.requested_scope="repository_write" | .scenario="authority-esca
 run_case authority-escalation "$tmp/claim-authority.json" "$tmp/receipt-normal.json" FAIL_CLOSED
 jq -e '.adversarial.reason=="AUTHORITY_ESCALATION_ACCEPTED" and any(.cells[];.reason=="AUTHORITY_ESCALATION_ACCEPTED")' "$artifact_dir/scenarios/authority-escalation/report.json" >/dev/null
 
-jq -S 'del(.target) | .scenario="malformed"' "$tmp/claim-normal.json" > "$tmp/claim-malformed.json"
+jq -S '.id="" | .scenario="malformed"' "$tmp/claim-normal.json" > "$tmp/claim-malformed.json"
 run_case malformed "$tmp/claim-malformed.json" "$tmp/receipt-normal.json" FAIL_CLOSED
 jq -e '.claim.reason=="MALFORMED_CLAIM" and any(.cells[];.reason=="MALFORMED_CLAIM")' "$artifact_dir/scenarios/malformed/report.json" >/dev/null
 
