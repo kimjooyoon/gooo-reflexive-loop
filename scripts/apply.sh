@@ -11,6 +11,13 @@ proposal=$2
 destination=$3
 activity=$4
 
+source_canonical=$(realpath -m "$source_file")
+destination_canonical=$(realpath -m "$destination")
+if [ "$source_canonical" = "$destination_canonical" ]; then
+  echo "source and destination must be different files" >&2
+  exit 65
+fi
+
 jq -e --arg activity "$activity" '.state=="CLOSED" and .apply_activity==$activity and .authority_scope=="temporary_output"' "$proposal" >/dev/null
 mkdir -p "$(dirname "$destination")"
 
